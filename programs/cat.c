@@ -26,12 +26,15 @@ int main(int argc, char *argv[]) {
     while (--argc > 0) {
         if ((fd = open(*++argv, O_RDONLY)) == -1) {
             write(STDERR_FILENO, CANNOT_OPEN_FILE_MSG, sizeof(CANNOT_OPEN_FILE_MSG));
+            return EXIT_FAILURE;
         }
         else
         {
             int rc = filecopy(fd, STDOUT_FILENO);
             (void)close(fd);
-            return rc;
+            if (rc < 0) {
+                return rc;
+            }
         }
     }
     return EXIT_SUCCESS;
