@@ -30,6 +30,11 @@ container runtime, but a smaller, simpler alternative would be preferred;
 [this code](https://github.com/w-vi/diyC) seems like it could be the start of a
 makeshift solution.
 
+## Tests
+
+There is setup involved for these to work, but you can run the tests under
+`test/` like so: `node ./test/enc.mjs`.
+
 ## License
 
 Some of the software in this repository was copied from other repositories, and

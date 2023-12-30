@@ -39,8 +39,6 @@ For more information, please refer to <http://unlicense.org/>
 #include <stdlib.h>
 #include <fcntl.h>
 
-
-
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //
 // CBC enables AES encryption in CBC-mode of operation.
@@ -685,31 +683,43 @@ void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length)
 there are intentional weaknesses, it is slightly more likely that they were
 designed to repeat at binary boundaries, such as 512 bytes, 1024 bytes, etc. */
 #define READ_BUFFER_SIZE 497
+// #undef BUFSIZ
+// #define BUFSIZ AES_KEYLEN
 
 const char* PROGRAM_NAME = "enc";
 const char* USAGE_MSG = "Invalid arguments. Correct usage: enc {file-to-encrypt}\n";
-// const char* FILE_ERR_MSG = "Error reading /dev/urandom.\n";
+const char* FILE_ERR_MSG = "Error reading /dev/urandom.\n";
 // const char* NOT_ENOUGH_RAND_MSG = "Did not read enough data from /dev/urandom.\n";
-// const char* END_OF_RAND_MSG = "Unexpected end of randomness from /dev/urandom.\n";
+const char* END_OF_RAND_MSG = "Unexpected end of randomness from /dev/urandom.\n";
 const char* CSPRNG_SOURCE = "/dev/urandom";
 // const char* ERR_READING = "Error reading plaintext file";
 // const char* ERR_WRITING_KEY = "Error writing to key file";
 // const char* ERR_WRITING_CIP = "Error writing to ciphertext file";
+const char* CANNOT_WRITE_ERR_MSG = "write error\n";
 
 int main(int argc, char *argv[])
 {
+    ssize_t bytes_read;
+
     if (argc != 3)
     {
         write(STDERR_FILENO, USAGE_MSG, strlen(USAGE_MSG));
         return EXIT_FAILURE;
     }
+
+    char *infile_name = argv[1];
+    char *outfile_name = argv[2];
+
     int csprng = open(CSPRNG_SOURCE, O_RDONLY);
     if (csprng < 0) { // If the file descriptor is -1, it is an error.
         perror("Error"); // perror() prints the error message indicated by errno.
         return EXIT_FAILURE;
     }
     char iv_buf[AES_KEYLEN];
-    ssize_t bytes_read = read(csprng, &iv_buf, AES_KEYLEN);
+    char key_buf[AES_KEYLEN];
+
+    // Load IV from CSPRNG.
+    bytes_read = read(csprng, &iv_buf, AES_KEYLEN);
     if (bytes_read < 0) { // -1 means the file does not exist or some other error.
         write(STDERR_FILENO, FILE_ERR_MSG, strlen(FILE_ERR_MSG));
         close(csprng); // We ignore any error this could return, because we are exiting anyway.
@@ -718,8 +728,99 @@ int main(int argc, char *argv[])
     // 0 means that we reached the end of the file, which should never happen with /dev/urandom
     if (bytes_read == 0) {
         write(STDERR_FILENO, END_OF_RAND_MSG, strlen(END_OF_RAND_MSG));
-        close(ifd); // We ignore any error this could return, because we are exiting anyway.
         close(csprng); // We ignore any error this could return, because we are exiting anyway.
         return EXIT_FAILURE;
     }
+
+    // Load Key from CSPRNG.
+    bytes_read = read(csprng, &key_buf, AES_KEYLEN);
+    if (bytes_read < 0) { // -1 means the file does not exist or some other error.
+        write(STDERR_FILENO, FILE_ERR_MSG, strlen(FILE_ERR_MSG));
+        close(csprng); // We ignore any error this could return, because we are exiting anyway.
+        return EXIT_FAILURE;
+    }
+    // 0 means that we reached the end of the file, which should never happen with /dev/urandom
+    if (bytes_read == 0) {
+        write(STDERR_FILENO, END_OF_RAND_MSG, strlen(END_OF_RAND_MSG));
+        close(csprng); // We ignore any error this could return, because we are exiting anyway.
+        return EXIT_FAILURE;
+    }
+
+    /* We need two copies of the plaintext file name, because each is going to
+    get concatenated with a different extension to produce a new file name. Most
+    file systems only allow file paths of up to 255 bytes, so we do not need to
+    malloc(). */
+    char outfile_name2[255];
+    char outfile_name3[255];
+    strcpy(outfile_name2, outfile_name);
+    strcpy(outfile_name3, outfile_name);
+    char* iv_file_name = strcat(outfile_name2, ".iv");
+    char* key_file_name = strcat(outfile_name3, ".key");
+
+    int ivfd = open(iv_file_name, O_WRONLY | O_CREAT, 0644); // ivfd = "Initialization Vector (IV) file descriptor"
+    if (ivfd < 0) { // If the file descriptor is -1, it is an error.
+        perror("Error"); // perror() prints the error message indicated by errno.
+        return EXIT_FAILURE;
+    }
+
+    if (write(ivfd, iv_buf, AES_KEYLEN) != AES_KEYLEN) {
+        write(STDERR_FILENO, CANNOT_WRITE_ERR_MSG, sizeof(CANNOT_WRITE_ERR_MSG));
+        return EXIT_FAILURE;
+    }
+    close(ivfd);
+
+    int keyfd = open(key_file_name, O_WRONLY | O_CREAT, 0644); // keyfd = "Key file descriptor"
+    if (keyfd < 0) { // If the file descriptor is -1, it is an error.
+        perror("Error"); // perror() prints the error message indicated by errno.
+        return EXIT_FAILURE;
+    }
+
+    if (write(keyfd, key_buf, AES_KEYLEN) != AES_KEYLEN) {
+        write(STDERR_FILENO, CANNOT_WRITE_ERR_MSG, sizeof(CANNOT_WRITE_ERR_MSG));
+        return EXIT_FAILURE;
+    }
+    close(keyfd);
+
+    struct AES_ctx ctx;
+
+    AES_init_ctx_iv(&ctx, &key_buf[0], &iv_buf[0]);
+    int pfd = open(argv[1], O_RDONLY); // pfd = "Plaintext file descriptor"
+    if (pfd < 0) { // If the file descriptor is -1, it is an error.
+        perror("Error"); // perror() prints the error message indicated by errno.
+        return EXIT_FAILURE;
+    }
+
+    int ofd = open(argv[2], O_WRONLY | O_CREAT | O_SYNC, 0644); // ofd = "Output file descriptor"
+    if (ofd < 0) { // If the file descriptor is -1, it is an error.
+        perror("Error"); // perror() prints the error message indicated by errno.
+        return EXIT_FAILURE;
+    }
+
+    ssize_t n;
+    char buf[AES_KEYLEN];
+    while ((n = read(pfd, buf, AES_KEYLEN)) > 0) {
+        if (n < AES_KEYLEN) {
+            // PKCS#7 Padding. See: https://en.wikipedia.org/wiki/Padding_(cryptography)#PKCS#5_and_PKCS#7
+            int padding_left = AES_KEYLEN - n;
+            int padding_byte = padding_left;
+            while (padding_left > 0)
+            {
+                buf[AES_KEYLEN - padding_left] = padding_byte;
+                padding_left--;
+            }
+
+            for (int loop = 0; loop < AES_KEYLEN; loop++)
+                 printf("%d ", buf[loop]);
+            // for (int i = n; i < AES_KEYLEN; i++) {
+            //     buf[i] = padding_byte;
+            // }
+            // printf("%")
+        }
+        AES_CBC_encrypt_buffer(&ctx, &buf[0], AES_KEYLEN);
+        if (write(ofd, buf, AES_KEYLEN) != AES_KEYLEN) {
+            write(STDERR_FILENO, CANNOT_WRITE_ERR_MSG, sizeof(CANNOT_WRITE_ERR_MSG));
+            return EXIT_FAILURE;
+        }
+    }
+    return EXIT_SUCCESS;
 }
