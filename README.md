@@ -25,7 +25,10 @@ Provided that it proves to be feasible, PunchcardOS will start with
 [lsh](https://github.com/brenns10/lsh) as a shell, and
 [kilo](https://github.com/antirez/kilo) as a minimal text editor. With these
 pre-compiled binaries alone, it should be possible to write and compile
-further C programs.
+further C programs. [crun](https://github.com/containers/crun) may be a suitable
+container runtime, but a smaller, simpler alternative would be preferred;
+[this code](https://github.com/w-vi/diyC) seems like it could be the start of a
+makeshift solution.
 
 ## License
 
