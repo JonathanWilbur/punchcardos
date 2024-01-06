@@ -66,4 +66,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## See Also
 
-Similar work has been done here: https://github.com/keiranrowan/tiny-core
+- https://github.com/keiranrowan/tiny-core
+- https://bootstrappable.org/
+- https://reproducible-builds.org/
+- https://savannah.nongnu.org/projects/stage0
+- https://nixos.org/
