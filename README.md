@@ -64,6 +64,53 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
+## Bootstrapping Order
+
+### Get a trustworthy GCC
+
+In order (I think):
+
+- Get an M2-Planet compiler via stage0
+- Re-compile shell and libc with M2-Planet?
+- Build `gzip` https://github.com/wkoszek/mini_gzip
+- Build hashing tools
+- Use the M2-Planet compiler produced to bootstrap GNU Mes
+- Make (https://github.com/waltje/MiniMake/tree/main)
+- Use GNU Mes to build TinyCC (could be built using either Make or manually running all commands)
+- Compile `oksh` https://github.com/ibara/oksh
+  - This uses a shell script `./configure`, but it looks simple enough where you
+    could manually perform those steps via other means.
+- Use TinyCC and `oksh` to build Bash (Apparently no other shell will work with GCC)
+  - Building Bash requires a shell, which does not have to be bash
+- Use TinyCC to build GNU Make
+- Build https://github.com/onetrueawk/awk
+  - // TODO: Requires `bison`
+  - Maybe this will work instead? https://github.com/raygard/wak/blob/main/monosrc/mono.c
+- // TODO: GNU Binutils _might_ be required. Review host-specific instructions for GCC.
+- // TODO: Perl _might_ be required, but it is unclear.
+- You need `libgmp`, but this might suffice: https://github.com/evdenis/mini-gmp
+- Build MPFR (The real deal, but it does not look outrageously complicated.)
+- Build MPC like normal
+- Build `libzstd` like normal: https://github.com/facebook/zstd
+- It is unclear whether ISL is universally required for GCC...
+- It is also unclear whether Python will be reuqired for GCC
+- Use TinyCC to build GCC (https://gcc.gnu.org/install/prerequisites.html)
+- Flex (https://github.com/ronpinkas/simplex)
+- libc (not sure which version, but you need one to build GCC) (https://github.com/pitust/shimlibc)
+
+The above steps will be done:
+
+1. Once, quickly and sloppily, just to make sure that it's possible.
+2. Again, but carefully reading all of the code before compiling.
+3. Again, after implementing hardware obfuscation.
+4. Again, on different hardware.
+
+### Get a trustworthy Linux Kernel
+
+For some reason, this page is where the requirements to build are found:
+
+https://docs.kernel.org/process/changes.html
+
 ## See Also
 
 - https://github.com/keiranrowan/tiny-core

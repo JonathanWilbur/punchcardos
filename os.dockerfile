@@ -27,6 +27,11 @@ RUN gpg --import /pgp/torvalds.gpg
 RUN gpg --import /pgp/musl.gpg
 RUN gpg --import /pgp/madler.gpg
 
+# Used for QEMU.
+# Obtained from: https://keys.openpgp.org/vks/v1/by-fingerprint/CEACC9E15534EBABB82D3FA03353C9CEF108B584
+# Found by: https://www.qemu.org/download/
+RUN gpg --import /pgp/mroth.gpg
+
 # RUN apt update && apt upgrade -y && \
 # apt install git-core gcc g++ gcc-multilib g++-multilib clang cmake \
 # python3-minimal python3-serial python3-pip apt gawk unzip parted wget \
