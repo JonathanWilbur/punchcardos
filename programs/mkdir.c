@@ -1,7 +1,9 @@
+#ifndef NOLIBC
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <stdio.h>
+#endif
 
 int main (int argc, char* argv[])
 {
