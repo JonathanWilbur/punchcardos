@@ -33,9 +33,50 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#ifndef NOLIBC
 #include <stdlib.h>
 #include <stdio.h>
 #include <libgen.h>
+#else
+
+/* This is probably not a correct implementation somehow, but it is surely
+"close enough." */
+static char *dirname (char *path) {
+    int len = strlen(path);
+
+    // Real dirname returns a period if supplied an empty string.
+    if (len == 0) {
+        return ".";
+    }
+
+    int i = len - 1;
+    int prev_was_slash = 0;
+    for (; i >= 0; i--) {
+        if (path[i] == '/') {
+            goto is_dir;
+        }
+    }
+
+    // Real dirname returns a period if there are no slashes.
+    return ".";
+
+    is_dir:
+    for (; i >= 0; i--) {
+        if (path[i] != '/') {
+            break;
+        }
+        path[i] = 0;
+    }
+
+    // If the string was all slashes, return a single slash.
+    if (strlen(path) == 0) {
+        return "/";
+    }
+
+    return path;
+}
+
+#endif
 
 int
 main(int argc, const char *argv[])
