@@ -30,6 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 
 */
+#ifndef NOLIBC
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -38,6 +39,18 @@ For more information, please refer to <http://unlicense.org/>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#else
+
+char* strcat(char* dest, char* src)
+{
+    char* ret = dest;
+    while (*dest)
+	    dest++;
+    while (*dest++ = *src++);
+    return ret;
+}
+
+#endif
 
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //
@@ -811,10 +824,6 @@ int main(int argc, char *argv[])
 
             for (int loop = 0; loop < AES_KEYLEN; loop++)
                  printf("%d ", buf[loop]);
-            // for (int i = n; i < AES_KEYLEN; i++) {
-            //     buf[i] = padding_byte;
-            // }
-            // printf("%")
         }
         AES_CBC_encrypt_buffer(&ctx, &buf[0], AES_KEYLEN);
         if (write(ofd, buf, AES_KEYLEN) != AES_KEYLEN) {
