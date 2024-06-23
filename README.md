@@ -30,6 +30,12 @@ container runtime, but a smaller, simpler alternative would be preferred;
 [this code](https://github.com/w-vi/diyC) seems like it could be the start of a
 makeshift solution.
 
+### Running Tilck on QEMU
+
+```bash
+qemu-system-i386 -rtc base=localtime -drive index=0,media=disk,format=raw,file=tilck.img
+```
+
 ## Tests
 
 There is setup involved for these to work, but you can run the tests under
