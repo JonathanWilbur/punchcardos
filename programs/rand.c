@@ -1,10 +1,12 @@
 /* This program generates a specified number of random bytes and appends them to
 a specified file, creating the output file if it does not exist. */
+#ifndef NOLIBC
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#endif
 
 /* We pick a weird size for the buffer used to read the CSPRNG, because, if
 there are intentional weaknesses, it is slightly more likely that they were
