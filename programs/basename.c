@@ -33,10 +33,54 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#ifndef NOLIBC
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
+#else
+
+/* This is probably not a correct implementation somehow, but it is surely
+"close enough." */
+static char *basename (char *path) {
+    int len = strlen(path);
+
+    // Real basename returns an empty string if supplied one.
+    if (len == 0) {
+        return "";
+    }
+
+    // Real basename returns a single slash if supplied one.
+    if (len == 1 && path[0] == '/') {
+        return "/";
+    }
+
+    int i = len - 1;
+
+    // Ignore trailing slashes, which is what the real basename does.
+    for (; i > 0; i--) {
+        if (path[i] != '/') {
+            break;
+        }
+    }
+
+    // Real basename returns a single slash if the input is all slashes.
+    if (i == 0) {
+        return "/";
+    }
+
+    // Set the trailing slash to a null character to cut the string off here.
+    path[i+1] = 0;
+
+    for (; i >= 0; i--) {
+        if (path[i] == '/') {
+            return &path[i+1];
+        }
+    }
+    return path;
+}
+
+#endif
 
 static void
 remove_suffix(char *str, char *suffix)
