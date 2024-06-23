@@ -352,11 +352,13 @@ Public License instead of this License.
 
 // Written by Robert Swierczek
 
+#ifndef NOLIBC
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <unistd.h>
 #include <fcntl.h>
+#endif
 #define int long long
 
 char *p, *lp, // current position in source code
