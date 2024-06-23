@@ -1,4 +1,6 @@
+#ifndef NOLIBC
 #include <stdlib.h>
+#endif
 
 int main(void)
 {
