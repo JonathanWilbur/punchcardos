@@ -3,11 +3,24 @@ it, outputting the encrypted file and the key used to encrypt it. The ciphertext
 file will have the same name as the input file but with an ".enc" extension
 added. The key file will have the same name as the input file, but with an
 ".otpkey" extension added. */
+#ifndef NOLIBC
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#else
+
+char* strcat(char* dest, char* src)
+{
+    char* ret = dest;
+    while (*dest)
+	    dest++;
+    while (*dest++ = *src++);
+    return ret;
+}
+
+#endif
 
 /* We pick a weird size for the buffer used to read the CSPRNG, because, if
 there are intentional weaknesses, it is slightly more likely that they were
