@@ -1,6 +1,8 @@
+#ifndef NOLIBC
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#endif
 
 int main (int argc,char* argv[])
 {
