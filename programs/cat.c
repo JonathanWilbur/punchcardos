@@ -1,7 +1,12 @@
+#ifndef NOLIBC
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#else
+#define O_RDONLY 00
+#define BUFSIZ 8192
+#endif
 
 const char* CANNOT_OPEN_FILE_MSG = "cannot open file\n";
 const char* CANNOT_WRITE_ERR_MSG = "write error\n";
