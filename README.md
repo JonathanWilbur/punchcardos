@@ -1,40 +1,114 @@
-# Simpler Core Utils
+# PunchcardOS
 
-This repo contains lightweight, simple rewrites of a select few of the GNU core
-utils for the purposes of implementing an extremely small, almost unusable,
-Linux distro that is only capable enough to minimally write C code, compile it,
-hash it, encrypt it, and send it over HTTP, SMTP, or FTP.
+Punchcard is a hyper-minimal Linux distro that contains just enough pre-compiled
+code to compile and run C programs for the purposes of bootstrap a trustworthy
+toolchain. Unless you compile from source, you don't really know that there
+aren't backdoors, unwanted telemetry, malware, etc. in the code you are running.
+This repository is meant to provide a minimal set of tools for "bootstrapping"
+other bigger, more complex tools like the GNU C compiler without using a
+pre-compiled GNU C compiler and glibc (among many other things).
 
-Every program in the `programs/` folder is a single-file. Using `ls` as an
-example, Compilation is as simple as:
+## Namesake
 
-```bash
-gcc programs/ls.c -o ls
-```
-
-This Linux-distro-in-progress is called "PunchcardOS," harkening back to the
-bootstrapping of computing by the use of
+"PunchcardOS" harkens back to the bootstrapping of computing by the use of
 [punchcard programs](https://en.wikipedia.org/wiki/Punched_card).
 
-## PunchcardOS
+## Details
 
-Provided that it proves to be feasible, PunchcardOS will start with
-[Tilck](https://github.com/vvaltchev/tilck) as a lighter alternative to Linux,
-[ChibiCC](https://github.com/rui314/chibicc) as a minimal C compiler, possibly
-[NoLibC](https://github.com/wtarreau/nolibc) as a C library,
-[lsh](https://github.com/brenns10/lsh) as a shell, and
-[kilo](https://github.com/antirez/kilo) as a minimal text editor. With these
-pre-compiled binaries alone, it should be possible to write and compile
-further C programs. [crun](https://github.com/containers/crun) may be a suitable
-container runtime, but a smaller, simpler alternative would be preferred;
-[this code](https://github.com/w-vi/diyC) seems like it could be the start of a
-makeshift solution.
+PunchcardOS will start with a pared-down Linux kernel, built specifically to run
+only on whatever hardware it is going to run on, but with no networking
+capability (by default, at least), and with other features added or removed to
+minimize code size while still accepting some security features. Ideally, this
+kernel will use no hardware-specific cryptography features. Can you really trust
+Intel to generate your keys without backdoors?
 
-### Running Tilck on QEMU
+The binaries included in `./programs` will be written so as to compile using
+`nolibc`, meaning that they can run as static binaries on a system that has no
+libc implementation. Every program will be small, understandable, and
+single-file, so that very little tooling is needed to build it.
+
+For this system to be usable, you will at least need a pre-compiled shell and a
+C compiler. These will be pre-compiled and included in the distro so you can
+bootstrap a system. (Maybe we could even do away with the shell in the future by
+making some small C compiler compile the shell, then run it.)
+
+You won't even have an `ls` command, a text editor, `cat`, `less`, or anything
+like that until you compile it in this constrained environment.
+
+Contenders for the minimal C compiler are:
+
+- [ChibiCC](https://github.com/rui314/chibicc)
+- [c4](https://github.com/rswier/c4)
+
+The shell will be based on [lsh](https://github.com/brenns10/lsh). All of the
+above will be modified to compile with `nolibc`, possibly with reduced
+functionality.
+
+Source for the programs in the `./programs` folder will be included, which you
+will need to compile in this constrained environment to use as a part of the
+bootstrapping.
+
+These programs include:
+
+- A text editor based on [kilo](https://github.com/antirez/kilo)
+- [An HTTP server](https://github.com/Francesco149/nolibc-httpd)
+- Tools for encrypting and hashing
+- Tools for making an HTTP POST request
+- Common unix utilities, such as `ls` and `rmdir`
+- Tools for inspecting assembly and binaries
+
+(Obviously some of these won't work if you have no networking.)
+
+The distro will also include clones of the
+[`stage0` source](https://savannah.nongnu.org/projects/stage0) and
+[GNU Mes](https://www.gnu.org/software/mes/), among other repositories that
+contain common build tooling useful for bootstrapping other projects. This
+project isn't meant to compete with these, but rather, complement them: to
+provide a trustworthy, minimal distro on which you can use these tools for more
+bootstrapping.
+
+## nolibc
+
+### About nolibc
+
+`nolibc` was a feature snuck into the Linux kernel without much fanfare.
+Basically, it is a few headers that implement just a subset of a proper libc
+implementation so applications do not have to link against a third-party libc.
+This is a libc that comes with the Linux kernel! You can read more about it
+[here](https://lwn.net/Articles/920158/). The root of all the headers includes
+documentation in the comments
+[here](https://github.com/torvalds/linux/blob/55027e689933ba2e64f3d245fb1ff185b3e7fc81/tools/include/nolibc/nolibc.h).
+
+You have to do a little work of your own to implement any libc functionality
+you are not getting from these headers, but small programs can function without.
+
+This is the perfect solution for PunchcardOS, since it cuts out the amount of
+software needed to bootstrap a trustworthy system.
+
+### Compiling with nolibc headers
+
+First, your code has to be written to actually use `nolibc`. To do this, wrap
+the headers you normally include with `#ifndef NOLIBC` and `#endif`. `nolibc`
+defines `NOLIBC`. Doing this prevents duplicate definitions coming from `glibc`
+or whatever other libc you use by default. If there are any unimplemented
+standard library things you need, define them in an `#else` block.
+
+To compile a static binary that is linked against `nolibc` (as described in the
+header of `nolibc.h` in the Linux Kernel), run:
 
 ```bash
-qemu-system-i386 -rtc base=localtime -drive index=0,media=disk,format=raw,file=tilck.img
+gcc -static -fno-asynchronous-unwind-tables -fno-ident -s -Os -nostdlib \
+ -include PATH_TO_LINUX_SRC/tools/include/nolibc/nolibc.h \
+ -o YOUR_BIN_NAME ./programs/YOUR_SRC_NAME -lgcc
 ```
+
+(After replacing `YOUR_BIN_NAME`, `YOUR_SRC_NAME`, and `PATH_TO_LINUX_SRC`
+obviously.) I don't know if the ordering of arguments matters, but it doesn't
+seem like it.
+
+You can see a good example of this in `./programs/basename.c`. The standard
+library doesn't have a `basename` function, so I had to implement one that is
+used only when compiling the `nolibc` variant.
 
 ## Tests
 
@@ -71,6 +145,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 ## Bootstrapping Order
+
+These are kind of my chicken-scratchy notes. I will clean these up as I figure
+out how this is going to work.
 
 ### Get a trustworthy GCC
 
