@@ -1,53 +1,52 @@
+#ifndef NOLIBC
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#endif
 
 int main (int argc, char* argv[])
 {
 	struct stat sb;
 
-	if (argc != 2) 
+	if (argc != 2)
 	{
 		puts("usage: file {file-name}");
 		return EXIT_FAILURE;
 	}
 
-	if (lstat(argv[1], &sb) == -1)
+	if (stat(argv[1], &sb) == -1)
 	{
 		perror("stat");
 		return EXIT_FAILURE;
 	}
 
-	printf("File type: ");
-	switch (sb.st_mode & S_IFMT)
-	{
-		case S_IFBLK:
-            printf("block device\n");      
-            break;
-		case S_IFCHR:
-            printf("character device\n");    
-            break;
-		case S_IFDIR:
-            printf("directory\n");             
-            break;
-		case S_IFIFO:
-            printf("fifo / pipe\n");           
-            break;
-		case S_IFLNK:
-            printf("symlink\n");             
-            break;
-		case S_IFREG:
-            printf("regular file\n");      
-            break;
-		case S_IFSOCK:
-            printf("socket\n");               
-            break;
-		default:
-            printf("unknown\n");                
-            break;
-	}
+	printf("%s: ", argv[1]);
+    if (S_ISREG(sb.st_mode)) {
+        puts("regular file");
+    }
+    else if (S_ISDIR(sb.st_mode)) {
+        puts("directory");
+    }
+    else if (S_ISCHR(sb.st_mode)) {
+        puts("character device");
+    }
+    else if (S_ISBLK(sb.st_mode)) {
+        puts("block device");
+    }
+    else if (S_ISFIFO(sb.st_mode)) {
+        puts("fifo / pipe");
+    }
+    else if (S_ISLNK(sb.st_mode)) {
+        puts("symlink");
+    }
+    else if (S_ISSOCK(sb.st_mode)) {
+        puts("socket");
+    }
+    else {
+        puts("unknown");
+    }
 	return EXIT_SUCCESS;
 }
 
