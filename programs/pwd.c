@@ -33,11 +33,42 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#ifndef NOLIBC
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
+#else
+
+char *strstr (char *haystack, const char *needle) {
+    size_t hlen = strlen(haystack);
+    size_t nlen = strlen(needle);
+    // If needle is the empty string, the return value is always haystack itself.
+    if (nlen == 0) {
+        return haystack;
+    }
+    if (hlen == 0) {
+        return NULL;
+    }
+
+    char needlechar0 = needle[0];
+    for (size_t i = 0; i < hlen - nlen; i++) {
+        if (haystack[i] != needlechar0) {
+            continue;
+        }
+        if (memcmp(&haystack[i], needle, nlen) == 0) {
+            return &haystack[i];
+        }
+    }
+    return NULL;
+}
+
+char *getcwd (char *buf, size_t size) {
+    return (char *)my_syscall2(__NR_getcwd, buf, size);
+}
+
+#endif
 
 /* XXX: fix me */
 #ifndef PATH_MAX
@@ -68,8 +99,7 @@ logical_pwd(void)
 	return (1);
 }
 
-int
-main(int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 	char buff[PATH_MAX];
 	int idx;
