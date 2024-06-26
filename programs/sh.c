@@ -2,12 +2,88 @@
 Source: https://github.com/brenns10/lsh/tree/master
 License: UNLICENSE at the time of copying.
 */
+#ifndef NOLIBC
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#else
+
+#define WUNTRACED       2
+
+size_t strspn (const char *str, const char *accept) {
+    size_t accept_len = strlen(accept);
+
+    size_t i;
+    for (i = 0; i < strlen(str); i++) {
+        int match = 0;
+
+        for (int j = 0; j < accept_len; j++) {
+            if (str[i] == accept[j]) {
+                match = 1;
+                break;
+            }
+        }
+
+        if (!match) {
+            return i;
+        }
+    }
+    return i;
+}
+
+size_t strcspn (const char *str, const char *reject) {
+    size_t reject_len = strlen(reject);
+
+    for (size_t i = 0; i < strlen(str); i++) {
+        for (int j = 0; j < reject_len; j++) {
+            if (str[i] == reject[j]) {
+                return i;
+            }
+        }
+    }
+    return strlen(str); // No chars were rejected: the whole string is allowed.
+}
+
+// Copied from glibc directly. See licenses/glibc.license.txt.
+char *strtok_r (char *s, const char *delim, char **save_ptr)
+{
+    char *end;
+
+    if (s == NULL) {
+        s = *save_ptr;
+    }
+
+    if (*s == '\0') {
+        *save_ptr = s;
+        return NULL;
+    }
+
+    /* Scan leading delimiters.  */
+    s += strspn (s, delim);
+    if (*s == '\0') {
+        *save_ptr = s;
+        return NULL;
+    }
+
+    /* Find the end of the token.  */
+    end = s + strcspn (s, delim);
+    if (*end == '\0') {
+        *save_ptr = end;
+        return s;
+    }
+
+    /* Terminate the token and make *SAVE_PTR point past it.  */
+    *end = '\0';
+    *save_ptr = end + 1;
+    return s;
+}
+
+#endif
+
+// TODO: Format this file.
 
 /*
   Function Declarations for builtin shell commands:
@@ -95,11 +171,12 @@ int lsh_launch(char **args)
 {
   pid_t pid;
   int status;
+  char *env[] = { NULL };
 
   pid = fork();
   if (pid == 0) {
     // Child process
-    if (execvp(args[0], args) == -1) {
+    if (execve(args[0], args, env) == -1) { // TODO: You could support arguments here.
       perror("lsh");
     }
     exit(EXIT_FAILURE);
@@ -130,6 +207,8 @@ int lsh_execute(char **args)
     return 1;
   }
 
+  puts(args[1]);
+
   for (i = 0; i < lsh_num_builtins(); i++) {
     if (strcmp(args[0], builtin_str[i]) == 0) {
       return (*builtin_func[i])(args);
@@ -145,19 +224,6 @@ int lsh_execute(char **args)
  */
 char *lsh_read_line(void)
 {
-#ifdef LSH_USE_STD_GETLINE
-  char *line = NULL;
-  ssize_t bufsize = 0; // have getline allocate a buffer for us
-  if (getline(&line, &bufsize, stdin) == -1) {
-    if (feof(stdin)) {
-      exit(EXIT_SUCCESS);  // We received an EOF
-    } else  {
-      perror("lsh: getline\n");
-      exit(EXIT_FAILURE);
-    }
-  }
-  return line;
-#else
 #define LSH_RL_BUFSIZE 1024
   int bufsize = LSH_RL_BUFSIZE;
   int position = 0;
@@ -193,7 +259,6 @@ char *lsh_read_line(void)
       }
     }
   }
-#endif
 }
 
 #define LSH_TOK_BUFSIZE 64
@@ -208,13 +273,14 @@ char **lsh_split_line(char *line)
   int bufsize = LSH_TOK_BUFSIZE, position = 0;
   char **tokens = malloc(bufsize * sizeof(char*));
   char *token, **tokens_backup;
+  char *token_save_ptr;
 
   if (!tokens) {
     fprintf(stderr, "lsh: allocation error\n");
     exit(EXIT_FAILURE);
   }
 
-  token = strtok(line, LSH_TOK_DELIM);
+  token = strtok_r(line, LSH_TOK_DELIM, &token_save_ptr);
   while (token != NULL) {
     tokens[position] = token;
     position++;
@@ -230,7 +296,7 @@ char **lsh_split_line(char *line)
       }
     }
 
-    token = strtok(NULL, LSH_TOK_DELIM);
+    token = strtok_r(NULL, LSH_TOK_DELIM, &token_save_ptr);
   }
   tokens[position] = NULL;
   return tokens;
