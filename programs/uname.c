@@ -33,57 +33,72 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include <sys/utsname.h>
+#ifndef NOLIBC
 #include <stdlib.h>
 #include <stdio.h>
-#include <getopt.h>
+#include <sys/utsname.h>
+#else
 
-#define CMD_M 0x1
-#define CMD_N 0x2
-#define CMD_R 0x4
-#define CMD_S 0x8
-#define CMD_V 0x10
+#include <sys/utsname.h>
 
-static int
-decode_flags(int argc, char *argv[])
+int uname (struct utsname *buf) {
+    return my_syscall1(__NR_uname, buf);
+}
+
+#endif
+
+#define CMD_M   0x1
+#define CMD_N   0x2
+#define CMD_R   0x4
+#define CMD_S   0x8
+#define CMD_V   0x10
+#define CMD_P   0x20
+#define CMD_I   0x40
+#define CMD_O   0x80
+
+static int decode_flags(int argc, char *argv[])
 {
 	int opt;
 	int flags;
 
 	flags = 0;
-	while ((opt = getopt(argc, argv, "amnrsv")) != -1)
-	{
-		switch (opt)
-		{
-		 case 'a':
-			return (CMD_M | CMD_N | CMD_R | CMD_S | CMD_V);
-		 case 'm':
-			flags |= CMD_M;
-			break;
-		 case 'n':
-			flags |= CMD_N;
-			break;
-		 case 'r':
-			flags |= CMD_R;
-			break;
-		 case 's':
-			flags |= CMD_S;
-			break;
-		 case 'v':
-			flags |= CMD_V;
-			break;
-		 default:
-			break;
-		}
-	}
+
+    for (int i = 1; i < argc; i++) {
+        char *arg = argv[i];
+        if (strcmp(arg, "--all") == 0 || strcmp(arg, "-a") == 0)
+            return (CMD_M | CMD_N | CMD_R | CMD_S | CMD_V);
+        else if (strcmp(arg, "--kernel-name") == 0 || strcmp(arg, "-s") == 0) {
+            flags |= CMD_S;
+        }
+        else if (strcmp(arg, "--nodename") == 0 || strcmp(arg, "-n") == 0) {
+            flags |= CMD_N;
+        }
+        else if (strcmp(arg, "--kernel-release") == 0 || strcmp(arg, "-r") == 0) {
+            flags |= CMD_R;
+        }
+        else if (strcmp(arg, "--kernel-version") == 0 || strcmp(arg, "-v") == 0) {
+            flags |= CMD_V;
+        }
+        else if (strcmp(arg, "--machine") == 0 || strcmp(arg, "-m") == 0) {
+            flags |= CMD_M;
+        }
+        else if (strcmp(arg, "--processor") == 0 || strcmp(arg, "-p") == 0) {
+            flags |= CMD_P;
+        }
+        else if (strcmp(arg, "--hardware-platform") == 0 || strcmp(arg, "-i") == 0) {
+            flags |= CMD_I;
+        }
+        else if (strcmp(arg, "--operating-system") == 0 || strcmp(arg, "-o") == 0) {
+            flags |= CMD_O;
+        }
+    }
 
 	if (flags == 0)
 		flags = CMD_S;
 	return (flags);
 }
 
-static void
-print_data(char *str)
+static void print_data (char *str)
 {
 	static char has_previous = 0;
 
@@ -93,15 +108,14 @@ print_data(char *str)
 	has_previous = 1;
 }
 
-int
-main(int argc, const char *argv[])
+// TODO: Compare with the real uname. It is not exactly the same...
+int main (int argc, const char *argv[])
 {
 	struct utsname u;
 	int flags;
 
 	flags = decode_flags(argc, (char **)argv);
-	if (uname(&u) < 0)
-	{
+	if (uname(&u) < 0) {
 		perror("uname");
 		return (EXIT_FAILURE);
 	}
@@ -116,6 +130,13 @@ main(int argc, const char *argv[])
 		print_data(u.version);
 	if (flags & CMD_M)
 		print_data(u.machine);
+    if (flags & CMD_P)
+        print_data(u.machine); // FIXME:
+    if (flags & CMD_I)
+        print_data(u.machine); // FIXME:
+    if (flags & CMD_O)
+        print_data(u.machine); // FIXME:
+
 	putchar('\n');
 	return (EXIT_SUCCESS);
 }
