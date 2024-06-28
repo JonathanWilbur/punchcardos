@@ -108,7 +108,6 @@ static void print_data (char *str)
 	has_previous = 1;
 }
 
-// TODO: Compare with the real uname. It is not exactly the same...
 int main (int argc, const char *argv[])
 {
 	struct utsname u;
@@ -130,12 +129,12 @@ int main (int argc, const char *argv[])
 		print_data(u.version);
 	if (flags & CMD_M)
 		print_data(u.machine);
-    if (flags & CMD_P)
-        print_data(u.machine); // FIXME:
-    if (flags & CMD_I)
-        print_data(u.machine); // FIXME:
-    if (flags & CMD_O)
-        print_data(u.machine); // FIXME:
+    // if (flags & CMD_P)
+    //     print_data(u.machine); // FIXME:
+    // if (flags & CMD_I)
+    //     print_data(u.machine); // FIXME:
+    // if (flags & CMD_O)
+    //     print_data("GNU/Linux"); // FIXME:
 
 	putchar('\n');
 	return (EXIT_SUCCESS);
