@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #else
-#define O_RDONLY 00
 #define BUFSIZ 8192
 #endif
 
