@@ -88,25 +88,13 @@ RUN make ARCH=x86_64 x86_64_defconfig
 
 # TODO: Refine this further
 RUN ./scripts/config --set-val CONFIG_NET n
-RUN ./scripts/config --set-val CONFIG_EXT3_FS y
-RUN ./scripts/config --set-val CONFIG_EXT3_FS_POSIX_ACL y
-RUN ./scripts/config --set-val CONFIG_EXT3_FS_SECURITY y
 RUN ./scripts/config --set-val CONFIG_ELF_CORE y
-RUN ./scripts/config --set-val CONFIG_BINFMT_ELF y
 RUN ./scripts/config --set-val CONFIG_AUTOFS_FS y
 RUN ./scripts/config --set-val CONFIG_IKCONFIG y
 RUN ./scripts/config --set-val CONFIG_IKCONFIG_PROC y
-RUN ./scripts/config --set-val CONFIG_DM_CRYPT y
 
 RUN ./scripts/config --set-val CONFIG_BLK_DEV y
 RUN ./scripts/config --set-val CONFIG_BLK_DEV_INITRD y
-RUN ./scripts/config --set-val CONFIG_EXT4_FS y
-RUN ./scripts/config --set-val CONFIG_IA32_EMULATION y
-RUN ./scripts/config --set-val CONFIG_VIRTIO_PCI y
-RUN ./scripts/config --set-val CONFIG_VIRTIO_BALLOON y
-RUN ./scripts/config --set-val CONFIG_VIRTIO_BLK y
-RUN ./scripts/config --set-val CONFIG_VIRTIO y
-RUN ./scripts/config --set-val CONFIG_VIRTIO_RING y
 
 RUN ./scripts/config --set-val FAT_FS y
 RUN ./scripts/config --set-val MSDOS_FS y
@@ -120,43 +108,33 @@ RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM_COUNT 1
 RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM_SIZE 131072
 
 RUN ./scripts/config --set-val CONFIG_TTY y
-RUN ./scripts/config --set-val CONFIG_VT y
-RUN ./scripts/config --set-val CONFIG_VT_CONSOLE y
 RUN ./scripts/config --set-val CONFIG_SERIAL_8250 y
 RUN ./scripts/config --set-val CONFIG_SERIAL_8250_CONSOLE y
-RUN ./scripts/config --set-val CONFIG_PRINTK y
 
 RUN ./scripts/config --set-val CONFIG_BINFMT_ELF y
 RUN ./scripts/config --set-val CONFIG_COMPAT_BINFMT_ELF y
 RUN ./scripts/config --set-val CONFIG_BINFMT_SCRIPT y
 
-RUN ./scripts/config --set-val CONFIG_PROC_FS y
-RUN ./scripts/config --set-val CONFIG_SYSFS y
 RUN ./scripts/config --set-val CONFIG_CRYPTO_MANAGER_DISABLE_TESTS y
 
-RUN ./scripts/config --set-val CONFIG_SCSI y
+# I believe some of these 
+RUN ./scripts/config --set-val CONFIG_PCI y
 RUN ./scripts/config --set-val CONFIG_ATA y
-RUN ./scripts/config --set-val CONFIG_NVME_CORE y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_GENERIC y
+RUN ./scripts/config --set-val CONFIG_ATA_PIIX y
+RUN ./scripts/config --set-val CONFIG_IDE y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDE y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDEPCI y
+RUN ./scripts/config --set-val CONFIG_64BIT y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_SD y
 
+# Disabled because I was getting kernel panics in QEMU from some sort of tracing
+# self-tests.
 RUN ./scripts/config --set-val CONFIG_FTRACE_SELFTEST n
 RUN ./scripts/config --set-val CONFIG_FTRACE_STARTUP_TEST n
 RUN ./scripts/config --set-val CONFIG_EVENT_TRACE_STARTUP_TEST n
 RUN ./scripts/config --set-val CONFIG_FTRACE_SORT_STARTUP_TEST n
 RUN ./scripts/config --set-val CONFIG_MMIOTRACE_TEST n
-
-RUN ./scripts/config --set-val CONFIG_PCI y
-RUN ./scripts/config --set-val CONFIG_ATA y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_GENERIC y
-RUN ./scripts/config --set-val CONFIG_ATA_PIIX y
-
-# Legacy IDE support (if needed)
-RUN ./scripts/config --set-val CONFIG_IDE y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDE y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDEPCI y
-
-RUN ./scripts/config --set-val CONFIG_ATA_PIIX y
-RUN ./scripts/config --set-val CONFIG_64BIT y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_SD y
 
 # Add these lines to Kbuild for reproducibility
 RUN echo 'KBUILD_BUILD_USER=a' >> Kbuild
@@ -188,24 +166,16 @@ RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o sh /build/initramfs/src/punchcard/sh.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o ls /build/initramfs/src/punchcard/ls.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o c4 /build/initramfs/src/punchcard/c4.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o kilo /build/initramfs/src/punchcard/kilo.c
-# RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o init /build/initramfs/src/punchcard/init-test.c
 
 RUN cp c4 sh cat ls kilo initramfs
 RUN mkdir -p initramfs/sbin
 RUN mkdir -p initramfs/usr/include/nolibc
 RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
 
-# TODO: Do I need to create /bin, /etc, /usr, etc.?
-
 # /sbin/init is hard-coded into the Linux kernel to run automatically when the
 # initramfs is loaded. We want a shell once the kernel loads, so we create a
 # shebang file that just runs the shell with itself.
-# RUN echo -e '#!/sh\n\n/sh' > initramfs/sbin/init
-# RUN cp sh initramfs/sbin/init
-# RUN chmod +x initramfs/sbin/init
-# RUN cp init initramfs/sbin/init
 RUN cp sh initramfs/init
-# RUN echo -e '#!/sh\n\n/sh' > initramfs/init
 
 # TODO: investigate why this HAD to be init and not /sbin/init.
 # This shouldn't be necessary, but I want to test.
@@ -223,6 +193,8 @@ WORKDIR /build
 # actually stored in it.
 RUN truncate -s 1GB boot
 RUN mkfs -t fat boot
+
+# Syslinux makes this into a bootable partition.
 RUN syslinux boot
 
 # Run these steps with the --privileged flag.
