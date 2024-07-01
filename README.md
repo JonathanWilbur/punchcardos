@@ -110,6 +110,54 @@ You can see a good example of this in `./programs/basename.c`. The standard
 library doesn't have a `basename` function, so I had to implement one that is
 used only when compiling the `nolibc` variant.
 
+## Building PunchcardOS
+
+```bash
+# Define which kernel modules are minimally required to run your hardware.
+lsmod > mods
+
+# Actual build of the distro.
+docker build . -t pcosbuild -f ./punchcardos.dockerfile
+
+# Privileged step required to mount filesystem.
+sudo docker run --privileged pcosbuild bash -c 'mkdir m && mount boot m && cp bzImage init.cpio files/* m && umount m'
+
+# This gets the ID of the most recent pcosbuild container.
+CONTAINER_ID=$(docker ps --format 'table {{.ID}} {{.Image}}' -a | grep pcosbuild | head -n1 | cut -d ' ' -f1)
+
+docker cp $CONTAINER_ID:/build/boot pcos.img
+```
+
+## Running PunchcardOS
+
+### On QEMU
+
+At minimum, you must run this:
+
+```bash
+qemu-system-x86_64 -drive file=pcos.img,format=raw,index=0
+```
+
+It is recommended that you add `-serial stdio` at the end of that, but I am not
+your boss.
+
+When it boots up, you should see a Syslinux prompt. This is because there is no
+configuration to tell Syslinux _what_ to boot and _how_ to boot it. At this
+prompt, type in:
+
+```
+/bzImage -initrd=/init.cpio root=/dev/sda
+```
+
+If you included `-serial stdio` on the QEMU command, add ` console=ttyS0` to the
+end of the above Syslinux prompt, and hit `ENTER`. You should see a shell
+appear in either the graphical QEMU window, or in the terminal where you ran
+QEMU. Type `ls` and hit `ENTER`. If you see a listing of entries, it booted!
+
+### On Physical Hardware
+
+PunchcardOS is yet to have been tested on physical hardware.
+
 ## Tests
 
 There is setup involved for these to work, but you can run the tests under
@@ -194,9 +242,75 @@ For some reason, this page is where the requirements to build are found:
 
 https://docs.kernel.org/process/changes.html
 
+## Other Notes
+
+Building Linux 6.9.6 on an 11th Gen Intel(R) Core(TM) i7 with 16 GB RAM using
+the `allmodconfig` build followed by the config changes in the
+`punchcardos.dockerfile` and using `make -j4` took almost exactly two hours.
+I tried this because the kernel was panicking, and I assumed that I was
+probably missing some driver Qemu needed, so compiling absolutely everything
+should make it work, right?
+
+(I do wonder if the compiled kernel modules would even be available in
+`initramfs`, so this might not have fixed my problem anyway. I don't really know
+how kernel modules work, but I think they are stored on disk, so I don't know
+how the kernel would be able to read them before there are any disks mounted!)
+
+After using the `allmodconfig`, the distro still failed to start up, but
+differently this time. It seemed to be panicking on some sort of tracing
+self-test. I tried disabling kernel configs related to this and I don't remember
+what the result was, but since I was going to have to do another two-hour long
+`allmodconfig` build again to see if that fixed it, I just gave up on this
+avenue of troubleshooting.
+
+After trying to get this to work for hours, I finally figured out how to get the
+kernel logs to display in `stdout` using Qemu (specifically so I can scroll up
+and see earlier kernel ring buffer messages that are otherwise lost when they go
+off-screen). You have to add `-serial stdio` to your `qemu-system-x86_64`
+command like so:
+
+```bash
+qemu-system-x86_64 -drive file=pcos.img,format=raw,index=0,media=disk -serial stdio
+```
+
+**and** when the Syslinux prompt appears, you have to add `console=ttyS0` to the
+kernel parameters, like so:
+
+```
+/bzImage -initrd=/init.cpio console=ttyS0
+```
+
+The former tells Qemu to use `stdin` and `stdout` for the serial terminal, and
+the latter tells the Linux kernel to use this serial terminal as its console.
+It seems like some kernel messages will still get displayed in the Qemu window,
+still, but they are sparse enough to not be a problem.
+
+This was useful for figuring out why I couldn't boot: the Linux kernel was
+panicking because I did not specify a root filesystem via the `root` parameter.
+I didn't know that was required. I still haven't figured out the fix to this,
+but I have gotten further.
+
+After testing all options for the `root` parameter, I found that the Linux
+kernel was successfully mounting a disk, but not finding `/sbin/init`. It turned
+out that, because I was using the `find` command in the directory above the
+initramfs to create the CPIO archive, this archive had all of its contents in an
+`initramfs` folder, making the correct path `/initramfs/sbin/init`. I haven't
+fixed this yet, but I figured I should document it as soon as I realized it.
+You can view the contents of CPIO archives using `cpio -itv < archive.cpio`.
+
+After getting past that hurdle, the only way I could get the disk to be "found"
+by the kernel was to remove the `media=disk` parameter from Qemu options. It is
+weird that this worked, because apparently this is the default behavior.
+
+After that, it could not find `/sbin/init`. I changed the build so that this was
+placed at `/init`. That fixed it and now it works, but I have no idea why. The
+documentation specifically lists where the kernel searches for init programs,
+and this is not one of those places!
+
 ## See Also
 
 - https://github.com/keiranrowan/tiny-core
+- https://github.com/rofl0r/hardcore-utils
 - https://bootstrappable.org/
 - https://reproducible-builds.org/
 - https://savannah.nongnu.org/projects/stage0
@@ -205,3 +319,8 @@ https://docs.kernel.org/process/changes.html
 ## To Install
 
 - https://github.com/xypron/usign
+
+## To Do
+
+- [ ] Is it possible to make single-file `binutils` / `elfutils` commands?
+- [ ] Tools for blacklisting or removing modules?

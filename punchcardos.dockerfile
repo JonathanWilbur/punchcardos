@@ -1,3 +1,7 @@
+# This currently must be ran with the --privileged flag, because you have to
+# create a mount to create the image. Hopefully I can fix this with a tool of
+# my own.
+# TODO: Use alpine
 FROM ubuntu:latest
 LABEL author="Jonathan M. Wilbur <jonathan@wilbur.space>"
 LABEL version="0.0.1"
@@ -13,15 +17,22 @@ ENV KERNEL_REQS="make gcc flex bison libelf-dev bc binutils"
 ENV KERNEL_OPT="libncurses-dev"
 ENV KERNEL_UNK="flex bison cpio clang dwarves jfsutils reiserfsprogs xfsprogs btrfs-progs libssl-dev"
 # Currently, all of the below are used, except maybe vim. IDK why I included it.
-ENV OTHER_DEPS="git vim gpg curl dosfstools bzip2 xz-utils perl tar"
+ENV OTHER_DEPS="git vim gpg curl dosfstools bzip2 xz-utils perl tar cpio syslinux"
 
 # Linux Kernel requirements: https://docs.kernel.org/process/changes.html
 # dwarves installed pahole
-RUN apt update && apt install -y ${KERNEL_REQS} ${OTHER_DEPS}
+RUN apt update && apt install -y ${KERNEL_REQS} ${OTHER_DEPS} ${KERNEL_UNK}
 # I am not sure what to do about udev; it seems like installing that could wreck my computer.
 # mcelog ignored. I don't see how to install this.
 
-RUN mkdir -p /build/initramfs/src
+# The initramfs: the in-memory file system the kernel loads at startup.
+RUN mkdir -p /build/initramfs
+# For files that will be included, but not part of the initramfs.
+RUN mkdir -p /build/files
+# Where needed pre-compiled executables will be built from source.
+RUN mkdir -p /build/stage/src
+
+# Where we store out PGP keys.
 RUN mkdir /pgp
 ADD /pgp/* /pgp
 
@@ -55,22 +66,25 @@ RUN gpg --import /pgp/mroth.gpg
 
 ENV LINUX_VERSION=6.9.6
 
-# This puts the Linux kernel source in the OS's own initramfs
-RUN mkdir /build/initramfs/src/linux
-RUN curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.9.6.tar.xz -o linux.tar.xz
-RUN curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.9.6.tar.sign -o linux.tar.sign
+RUN curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.xz -o linux.tar.xz
+RUN curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.sign -o linux.tar.sign
 
 # The TAR archive is signed, not the compressed XZ file.
 RUN xz -cd linux.tar.xz | gpg --verify linux.tar.sign -
-RUN tar -C /build/initramfs/src/linux --strip-components 1 -xvf linux.tar.xz
 
-WORKDIR /build/initramfs/src/linux
+RUN mkdir /build/stage/src/linux
+RUN tar -C /build/stage/src/linux --strip-components 1 -xvf linux.tar.xz
 
-# RUN make mrproper
+WORKDIR /build/stage/src/linux
+RUN make mrproper
 ADD mods mods
-ENV LSMOD=/build/initramfs/src/linux/mods
-RUN make allnoconfig
-RUN make localyesconfig
+ENV LSMOD=/build/stage/src/linux/mods
+# IDK why, but it seems that you have to first have a config before
+# localyesconfig will work.
+# RUN make allnoconfig
+# RUN make localyesconfig
+RUN make ARCH=x86_64 x86_64_defconfig
+# RUN make allmodconfig
 
 # TODO: Refine this further
 RUN ./scripts/config --set-val CONFIG_NET n
@@ -84,6 +98,66 @@ RUN ./scripts/config --set-val CONFIG_IKCONFIG y
 RUN ./scripts/config --set-val CONFIG_IKCONFIG_PROC y
 RUN ./scripts/config --set-val CONFIG_DM_CRYPT y
 
+RUN ./scripts/config --set-val CONFIG_BLK_DEV y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_INITRD y
+RUN ./scripts/config --set-val CONFIG_EXT4_FS y
+RUN ./scripts/config --set-val CONFIG_IA32_EMULATION y
+RUN ./scripts/config --set-val CONFIG_VIRTIO_PCI y
+RUN ./scripts/config --set-val CONFIG_VIRTIO_BALLOON y
+RUN ./scripts/config --set-val CONFIG_VIRTIO_BLK y
+RUN ./scripts/config --set-val CONFIG_VIRTIO y
+RUN ./scripts/config --set-val CONFIG_VIRTIO_RING y
+
+RUN ./scripts/config --set-val FAT_FS y
+RUN ./scripts/config --set-val MSDOS_FS y
+RUN ./scripts/config --set-val VFAT_FS y
+RUN ./scripts/config --set-val EXFAT_FS y
+
+# This might be needed for initramfs to work.
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM_COUNT 1
+# The number is in unit of 1014B. Currently set to 128MB.
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM_SIZE 131072
+
+RUN ./scripts/config --set-val CONFIG_TTY y
+RUN ./scripts/config --set-val CONFIG_VT y
+RUN ./scripts/config --set-val CONFIG_VT_CONSOLE y
+RUN ./scripts/config --set-val CONFIG_SERIAL_8250 y
+RUN ./scripts/config --set-val CONFIG_SERIAL_8250_CONSOLE y
+RUN ./scripts/config --set-val CONFIG_PRINTK y
+
+RUN ./scripts/config --set-val CONFIG_BINFMT_ELF y
+RUN ./scripts/config --set-val CONFIG_COMPAT_BINFMT_ELF y
+RUN ./scripts/config --set-val CONFIG_BINFMT_SCRIPT y
+
+RUN ./scripts/config --set-val CONFIG_PROC_FS y
+RUN ./scripts/config --set-val CONFIG_SYSFS y
+RUN ./scripts/config --set-val CONFIG_CRYPTO_MANAGER_DISABLE_TESTS y
+
+RUN ./scripts/config --set-val CONFIG_SCSI y
+RUN ./scripts/config --set-val CONFIG_ATA y
+RUN ./scripts/config --set-val CONFIG_NVME_CORE y
+
+RUN ./scripts/config --set-val CONFIG_FTRACE_SELFTEST n
+RUN ./scripts/config --set-val CONFIG_FTRACE_STARTUP_TEST n
+RUN ./scripts/config --set-val CONFIG_EVENT_TRACE_STARTUP_TEST n
+RUN ./scripts/config --set-val CONFIG_FTRACE_SORT_STARTUP_TEST n
+RUN ./scripts/config --set-val CONFIG_MMIOTRACE_TEST n
+
+RUN ./scripts/config --set-val CONFIG_PCI y
+RUN ./scripts/config --set-val CONFIG_ATA y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_GENERIC y
+RUN ./scripts/config --set-val CONFIG_ATA_PIIX y
+
+# Legacy IDE support (if needed)
+RUN ./scripts/config --set-val CONFIG_IDE y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDE y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDEPCI y
+
+RUN ./scripts/config --set-val CONFIG_ATA_PIIX y
+RUN ./scripts/config --set-val CONFIG_64BIT y
+RUN ./scripts/config --set-val CONFIG_BLK_DEV_SD y
+
 # Add these lines to Kbuild for reproducibility
 RUN echo 'KBUILD_BUILD_USER=a' >> Kbuild
 RUN echo 'KBUILD_BUILD_HOST=b' >> Kbuild
@@ -91,39 +165,71 @@ RUN echo 'KBUILD_BUILD_TIMESTAMP="Sat 22 Jun 2024 03:54:20 PM EDT"' >> Kbuild
 
 # This is a Reproducible Builds standard
 ENV SOURCE_DATE_EPOCH=1719086180
-RUN make -j 6
+RUN make -j 4
 
 RUN cp arch/x86/boot/bzImage /build
+
+RUN mv /linux.tar.xz /build/files
+RUN mv /linux.tar.sign /build/files
+
+# Add software licenses
+RUN mkdir -p /build/initramfs/lic
+ADD /licenses/* /build/initramfs/lic
 
 # Add minimal programs
 RUN mkdir -p /build/initramfs/src/punchcard
 ADD /programs/* /build/initramfs/src/punchcard
 
-ENV NOLIBC_INC="-include /build/initramfs/src/linux/tools/include/nolibc/nolibc.h"
+ENV NOLIBC_INC="-include /build/stage/src/linux/tools/include/nolibc/nolibc.h"
 ENV NOLIBC_FLAGS="-static -fno-asynchronous-unwind-tables -fno-ident -s -Os -nostdlib"
-# TODO: Do I need to build glibc?
 WORKDIR /build
-# RUN gcc -o c4 /build/initramfs/src/punchcard/c4.c
-# RUN gcc -o sh /build/initramfs/src/punchcard/sh.c
-# RUN gcc -o cat /build/initramfs/src/punchcard/cat.c
-# RUN gcc -o kilo /build/initramfs/src/punchcard/kilo.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o cat /build/initramfs/src/punchcard/cat.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o sh /build/initramfs/src/punchcard/sh.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o ls /build/initramfs/src/punchcard/ls.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o c4 /build/initramfs/src/punchcard/c4.c
+RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o kilo /build/initramfs/src/punchcard/kilo.c
+# RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o init /build/initramfs/src/punchcard/init-test.c
 
-# This successfully produces a .o file.
-# gcc ./programs/arch.c -lgcc
+RUN cp c4 sh cat ls kilo initramfs
+RUN mkdir -p initramfs/sbin
+RUN mkdir -p initramfs/usr/include/nolibc
+RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
 
-RUN cp c4 sh cat cat2 kilo initramfs
+# TODO: Do I need to create /bin, /etc, /usr, etc.?
 
-RUN find ./initramfs | cpio -o -H newc > ./init.cpio
-RUN dd if=/dev/zero of=boot bs=1M count=50
+# /sbin/init is hard-coded into the Linux kernel to run automatically when the
+# initramfs is loaded. We want a shell once the kernel loads, so we create a
+# shebang file that just runs the shell with itself.
+# RUN echo -e '#!/sh\n\n/sh' > initramfs/sbin/init
+# RUN cp sh initramfs/sbin/init
+# RUN chmod +x initramfs/sbin/init
+# RUN cp init initramfs/sbin/init
+RUN cp sh initramfs/init
+# RUN echo -e '#!/sh\n\n/sh' > initramfs/init
+
+# TODO: investigate why this HAD to be init and not /sbin/init.
+# This shouldn't be necessary, but I want to test.
+RUN chmod +x initramfs/init
+
+# NOTE: You have to cd into the initramfs folder so that `find .` does not
+# return a list of entries that begin with `./initramfs/`, otherwise, your
+# entire initramfs is going to be in a folder called `initramfs` when extracted!
+WORKDIR /build/initramfs
+RUN find . | cpio -o -H newc > ../init.cpio
+WORKDIR /build
+# RUN dd if=/dev/zero of=boot bs=1M count=1000
+# Truncate has an advantage of creating a sparse file on supporting systems,
+# which means that this won't really take up this much space until something is
+# actually stored in it.
+RUN truncate -s 1GB boot
 RUN mkfs -t fat boot
 RUN syslinux boot
-RUN mkdir m
-RUN mount boot m
-RUN cp bzImage init.cpio m
-RUN umount m
 
-RUN echo 'Build complete. Output file named boot.'
+# Run these steps with the --privileged flag.
+# RUN mkdir m
+# TODO: Write something that can do this without an actual mount.
+# RUN mount boot m
+# RUN cp bzImage init.cpio m
+# RUN umount m
+
+RUN echo 'Build complete. Output files named bzImage and init.cpio.'
