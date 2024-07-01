@@ -11,8 +11,6 @@ License: UNLICENSE at the time of copying.
 #include <string.h>
 #else
 
-#define WUNTRACED       2
-
 size_t strspn (const char *str, const char *accept) {
     size_t accept_len = strlen(accept);
 
@@ -206,8 +204,6 @@ int lsh_execute(char **args)
     // An empty command was entered.
     return 1;
   }
-
-  puts(args[1]);
 
   for (i = 0; i < lsh_num_builtins(); i++) {
     if (strcmp(args[0], builtin_str[i]) == 0) {
