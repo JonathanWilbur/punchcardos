@@ -171,13 +171,10 @@ RUN mkdir -p initramfs/sbin
 RUN mkdir -p initramfs/usr/include/nolibc
 RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
 
-# /sbin/init is hard-coded into the Linux kernel to run automatically when the
-# initramfs is loaded. We want a shell once the kernel loads, so we create a
-# shebang file that just runs the shell with itself.
+# /init is hard-coded into the Linux kernel to run automatically when the
+# initramfs is loaded. We are using the shell as our init process.
 RUN cp sh initramfs/init
 
-# TODO: investigate why this HAD to be init and not /sbin/init.
-# This shouldn't be necessary, but I want to test.
 RUN chmod +x initramfs/init
 
 # NOTE: You have to cd into the initramfs folder so that `find .` does not
