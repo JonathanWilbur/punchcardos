@@ -161,13 +161,12 @@ ADD /programs/* /build/initramfs/src/punchcard
 ENV NOLIBC_INC="-include /build/stage/src/linux/tools/include/nolibc/nolibc.h"
 ENV NOLIBC_FLAGS="-static -fno-asynchronous-unwind-tables -fno-ident -s -Os -nostdlib"
 WORKDIR /build
-RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o cat /build/initramfs/src/punchcard/cat.c
-RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o sh /build/initramfs/src/punchcard/sh.c
-RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o ls /build/initramfs/src/punchcard/ls.c
-RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o c4 /build/initramfs/src/punchcard/c4.c
-RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o kilo /build/initramfs/src/punchcard/kilo.c
+RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/cat /build/initramfs/src/punchcard/cat.c
+RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/sh /build/initramfs/src/punchcard/sh.c
+RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/ls /build/initramfs/src/punchcard/ls.c
+RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/c4 /build/initramfs/src/punchcard/c4.c
+RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/kilo /build/initramfs/src/punchcard/kilo.c
 
-RUN cp c4 sh cat ls kilo initramfs
 RUN mkdir -p initramfs/sbin
 RUN mkdir -p initramfs/usr/include/nolibc
 RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
