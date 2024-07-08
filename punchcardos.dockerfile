@@ -10,12 +10,13 @@ LABEL description="PunchcardOS: A minimal Unix-like distro for bootstrapping a t
 # This doesn't seem to be mentioned, but the Kernel requires Perl to build.
 # Perl is included by default in Ubuntu.
 
+# TODO: Clean this up, so I can find the true minimum I need to bootstrap PunchcardOS.
 # TODO: I think I can get rid of bc by writing my own.
 # The only place where the Kernel uses it for building is here: kernel/time/timeconst.bc.
 # (It is used a lot for tests, I think.)
 ENV KERNEL_REQS="make gcc flex bison libelf-dev bc binutils"
 ENV KERNEL_OPT="libncurses-dev"
-ENV KERNEL_UNK="flex bison cpio clang dwarves jfsutils reiserfsprogs xfsprogs btrfs-progs libssl-dev"
+ENV KERNEL_UNK="cpio clang dwarves jfsutils reiserfsprogs xfsprogs btrfs-progs libssl-dev"
 # Currently, all of the below are used, except maybe vim. IDK why I included it.
 ENV OTHER_DEPS="git vim gpg curl dosfstools bzip2 xz-utils perl tar cpio syslinux"
 
@@ -171,9 +172,37 @@ RUN mkdir -p initramfs/sbin
 RUN mkdir -p initramfs/usr/include/nolibc
 RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
 
+# TODO: Somebody online said you need:
+# gcc, make, binutils, perl, bc, a shell, tar, cpio, gzip, util-linux, kmod,
+# mkinitrd, squashfs-tools, and maybe flex, bison, and openssl.
+
+# TODO: Fetch and build: https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27.tar.bz2
+# TODO: musl
+# TODO: glibc
+# TODO: gcc
+# TODO: bash
+# TODO: bc
+# TODO: minimake
+# TODO: elfutils
+# TODO: flex
+# TODO: bison
+# TODO: cpio
+# TODO: dwarves
+# TODO: perl
+# TODO: git
+# TODO: gpg
+# TODO: dosfstools
+# TODO: bzip2
+# TODO: xz-utils
+# TODO: tar
+# TODO: syslinux
+# TODO: util-linux
+# TODO: kmod? (Isn't that part of the kernel?)
+# TODO: disassembler
+
 # /init is hard-coded into the Linux kernel to run automatically when the
 # initramfs is loaded. We are using the shell as our init process.
-RUN cp sh initramfs/init
+RUN cp initramfs/sh initramfs/init
 
 RUN chmod +x initramfs/init
 
