@@ -147,8 +147,7 @@ To compile a static binary that is linked against `nolibc` (as described in the
 header of `nolibc.h` in the Linux Kernel), run:
 
 ```bash
-gcc -static -fno-asynchronous-unwind-tables -fno-ident -s -Os -nostdlib \
- -include PATH_TO_LINUX_SRC/tools/include/nolibc/nolibc.h \
+gcc -static -nostdlib -include PATH_TO_LINUX_SRC/tools/include/nolibc/nolibc.h \
  -o YOUR_BIN_NAME ./programs/YOUR_SRC_NAME -lgcc
 ```
 
