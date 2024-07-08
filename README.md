@@ -3,10 +3,14 @@
 Punchcard is a hyper-minimal Linux distro that contains just enough pre-compiled
 code to compile and run C programs for the purposes of bootstrap a trustworthy
 toolchain. Unless you compile from source, you don't really know that there
-aren't backdoors, unwanted telemetry, malware, etc. in the code you are running.
+aren't backdoors, unwanted telemetry, malware, etc. in the code you are running,
+and even if you inspect the source, the compiler, or another tool you use could
+be inserting malware into its outputs (Supply Chain Attack).
+
 This repository is meant to provide a minimal set of tools for "bootstrapping"
 other bigger, more complex tools like the GNU C compiler without using a
-pre-compiled GNU C compiler and glibc (among many other things).
+pre-compiled GNU C compiler and glibc (among many other things) so that you can
+have a trustworthy system to build up from.
 
 ## Namesake
 
@@ -35,14 +39,14 @@ making some small C compiler compile the shell, then run it.)
 You won't even have an `ls` command, a text editor, `cat`, `less`, or anything
 like that until you compile it in this constrained environment.
 
-Contenders for the minimal C compiler are:
-
-- [ChibiCC](https://github.com/rui314/chibicc)
-- [c4](https://github.com/rswier/c4)
-
-The shell will be based on [lsh](https://github.com/brenns10/lsh). All of the
-above will be modified to compile with `nolibc`, possibly with reduced
-functionality.
+The minimal C compiler will be based on
+[ChibiCC](https://github.com/rui314/chibicc), and the shell will be based on
+[lsh](https://github.com/brenns10/lsh). All of the above will be modified to
+compile with `nolibc`, possibly with reduced functionality. The assembler will
+be based on [minias](https://github.com/andrewchambers/minias). Maybe
+[this](https://github.com/stfsux/rld/tree/master) will work as a small linker,
+or perhaps [this](https://github.com/ushitora-anqou/aqcc/tree/master/ld)?
+ELF utils is just absolutely huge, so it would be preferable to avoid it.
 
 Source for the programs in the `./programs` folder will be included, which you
 will need to compile in this constrained environment to use as a part of the
@@ -66,6 +70,52 @@ contain common build tooling useful for bootstrapping other projects. This
 project isn't meant to compete with these, but rather, complement them: to
 provide a trustworthy, minimal distro on which you can use these tools for more
 bootstrapping.
+
+## The Goal
+
+The goals of this project is to create a distro that is small enough where all
+of the code could reasonably be reviewed and understood, but which can also
+bootstrap itself, using only a pre-compiled Linux kernel, C toolchain, and
+shell: the bare minimum to bootstrap.
+
+Once PunchcardOS itself has been bootstrapped using its own small, trustworthy
+tooling, you could assume that its pre-compiled kernel, C toolchain, and shell
+are also trustworthy, and therefore you have a fully trustworthy system. On the
+second pass, the kernel will be compiled with networking support, so that source
+archives can be fetched from remote sources to bootstrap any software.
+
+In short:
+
+1. Build PunchcardOS (using untrustworthy tooling)
+2. Use PunchcardOS to bootstrap PunchcardOS (thereby producing a trustworthy PunchcardOS)
+3. Use PunchcardOS (now trustworthy) to bootstrap any software
+4. Publish the hashes of your build outputs so others can verify, or publish the
+   build outputs themselves.
+
+## Executable Standards
+
+All executables in this project will be able to be built against nolibc, consist
+of only a single file, and will use hard-coded timestamps (except the `date`
+command).
+
+### Hard-Coded Timestamps
+
+We want the executables produced using the tools in this repository to have
+consistent outputs, regardless of the machine or the time in which they were
+created. A given set of inputs and tooling, should always produce a
+byte-for-byte equal output, so that they (or hashes of them) can be compared
+between bootstrapping attempts on different machines.
+
+As such, source files in this repository, if taken from other projects, will be
+modified so that they use a fixed timestamp where they would normally use the
+real timestamp.
+
+Areas where code was modified to hard-code a timestamp will be annotated with a
+comment that contains `HARDCODED_TIMESTAMP`, in that exact casing, so that you
+can search for these and change it, if desired.
+
+The timestamp to which these will be set is to be decided upon, but it will be
+documented here.
 
 ## nolibc
 
@@ -244,6 +294,8 @@ https://docs.kernel.org/process/changes.html
 
 ## Other Notes
 
+### Getting the distro booting
+
 Building Linux 6.9.6 on an 11th Gen Intel(R) Core(TM) i7 with 16 GB RAM using
 the `allmodconfig` build followed by the config changes in the
 `punchcardos.dockerfile` and using `make -j4` took almost exactly two hours.
@@ -307,6 +359,20 @@ placed at `/init`. That fixed it and now it works, but I have no idea why. The
 documentation specifically lists where the kernel searches for init programs,
 and this is not one of those places!
 
+### A C Compiler
+
+As it turns out `c4` is not viable as a bootstrapping compiler. It basically
+only works for compiling itself, and its codebase is so abstruse that it is not
+suitable for a "bootstrapping" compiler. ChibiCC seems more promising. I think
+I will leave `c4` in the distro, though. If somebody can make it work for their
+needs, it's fine to have another C compiler lying around.
+
+UPDATE: After experimenting with ChibiCC, I don't think that will work either.
+Specifically, nolibc uses too many GCC-specific features where I don't think I
+can make nolibc work. See comments in `./programs/chibicc.c`. I _might_ be able
+to make this work by using a modified nolibc. The biggest thing I need to
+eliminate is the GCC-style inline assembly.
+
 ## See Also
 
 - https://github.com/keiranrowan/tiny-core
@@ -324,3 +390,9 @@ and this is not one of those places!
 
 - [ ] Is it possible to make single-file `binutils` / `elfutils` commands?
 - [ ] Tools for blacklisting or removing modules?
+- [ ] Syslinux configuration
+- [ ] Clear kernel ring buffer messages from screen
+- [ ] Get a working C compiler
+- [ ] Shuffle kernel syscall numbers so malicious hardware is clueless
+- [ ] Make a linker
+- [ ] Make an assembler
