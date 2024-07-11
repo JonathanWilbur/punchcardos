@@ -293,6 +293,20 @@ https://docs.kernel.org/process/changes.html
 
 ## Other Notes
 
+### Ambiguous Error with Docker
+
+After adding the steps to the dockerfile to fetch the tarballs from remote
+sources, I was getting an error that said something to the effect of
+
+```bash
+failed to solve: failed to prepare $SOMETHING_1 as $SOMETHING_2: max depth exceeded
+```
+
+As it turns out, this absolutely spectacular and unambiguous error message means
+that you have too many steps in your Dockerfile, and you need to condense steps.
+I got by it by collapsing simliar steps into the scripts
+`./scripts/configure_kernel.sh` and `./scripts/fetch_sources.sh`.
+
 ### Getting the distro booting
 
 Building Linux 6.9.6 on an 11th Gen Intel(R) Core(TM) i7 with 16 GB RAM using
@@ -358,6 +372,15 @@ placed at `/init`. That fixed it and now it works, but I have no idea why. The
 documentation specifically lists where the kernel searches for init programs,
 and this is not one of those places!
 
+I had another problem later on: after adding the downloading of tarballs from
+online into the `init.cpio`, and after refactoring this into a Bash script
+outside of the Dockerfile, the Syslinux boot prompt would complain that there
+was "No such file or directory" as `init.cpio`, even though copying this file
+into the final image succeeded. Once again, a piece of shit program is reporting
+a misleading error message: the problem was that the system didn't have enough
+memory to load the 224M initrd filesystem. I changed it to 1G, which got it to
+boot up successfully.
+
 ### A C Compiler
 
 As it turns out `c4` is not viable as a bootstrapping compiler. It basically
@@ -395,3 +418,13 @@ eliminate is the GCC-style inline assembly.
 - [ ] Shuffle kernel syscall numbers so malicious hardware is clueless
 - [ ] Make a linker
 - [ ] Make an assembler
+- [ ] Container building via [Earthly](https://github.com/earthly/earthly)
+- [ ] https://github.com/oriansj/torture_c/tree/main
+- [ ] https://github.com/jart/sectorlisp
+- [ ] I still haven't found a suitable ELF / x86-64 disassembler.
+- [ ] Signed commits
+- [ ] Signed releases
+- [ ] Signed container images
+- [ ] Use `seccomp()`
+- [ ] Use `chroot()`
+- [ ] Document special / non-standard programs
