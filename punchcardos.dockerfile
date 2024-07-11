@@ -37,27 +37,8 @@ RUN mkdir -p /build/stage/src
 RUN mkdir /pgp
 ADD /pgp/* /pgp
 
-# You might ask yourself: why did I hard-code the GPG keys into this repository?
-# The reason is that the keys are distributed from the same source as the source
-# tarballs, so if the source tarballs are compromised, the keys could be
-# compromised as well. In other words, there is no point in getting a tarball
-# from source X, then verifying them using the keys from source X.
-#
-# On the other hand, embedding the keys in the repository ensures that two
-# distribution points must be compromised to compromise the installation.
-#
-# GPG keys are not supposed to change often, but if they do legitimately change,
-# you can just create a PR to update the keys, or fork this repo.
-RUN gpg --import /pgp/gnu-keyring.gpg
 RUN gpg --import /pgp/gregkh.gpg
 RUN gpg --import /pgp/torvalds.gpg
-RUN gpg --import /pgp/musl.gpg
-RUN gpg --import /pgp/madler.gpg
-
-# Used for QEMU.
-# Obtained from: https://keys.openpgp.org/vks/v1/by-fingerprint/CEACC9E15534EBABB82D3FA03353C9CEF108B584
-# Found by: https://www.qemu.org/download/
-RUN gpg --import /pgp/mroth.gpg
 
 # We are skipping Rust for now.
 # TODO: Add --profile minimal
@@ -87,64 +68,13 @@ ENV LSMOD=/build/stage/src/linux/mods
 RUN make ARCH=x86_64 x86_64_defconfig
 # RUN make allmodconfig
 
-# TODO: Refine this further
-RUN ./scripts/config --set-val CONFIG_NET n
-RUN ./scripts/config --set-val CONFIG_ELF_CORE y
-RUN ./scripts/config --set-val CONFIG_AUTOFS_FS y
-RUN ./scripts/config --set-val CONFIG_IKCONFIG y
-RUN ./scripts/config --set-val CONFIG_IKCONFIG_PROC y
-
-RUN ./scripts/config --set-val CONFIG_BLK_DEV y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_INITRD y
-
-RUN ./scripts/config --set-val FAT_FS y
-RUN ./scripts/config --set-val MSDOS_FS y
-RUN ./scripts/config --set-val VFAT_FS y
-RUN ./scripts/config --set-val EXFAT_FS y
-
-# This might be needed for initramfs to work.
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM_COUNT 1
-# The number is in unit of 1014B. Currently set to 128MB.
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_RAM_SIZE 131072
-
-RUN ./scripts/config --set-val CONFIG_TTY y
-RUN ./scripts/config --set-val CONFIG_SERIAL_8250 y
-RUN ./scripts/config --set-val CONFIG_SERIAL_8250_CONSOLE y
-
-RUN ./scripts/config --set-val CONFIG_BINFMT_ELF y
-RUN ./scripts/config --set-val CONFIG_COMPAT_BINFMT_ELF y
-RUN ./scripts/config --set-val CONFIG_BINFMT_SCRIPT y
-
-RUN ./scripts/config --set-val CONFIG_CRYPTO_MANAGER_DISABLE_TESTS y
-
-# I believe some of these 
-RUN ./scripts/config --set-val CONFIG_PCI y
-RUN ./scripts/config --set-val CONFIG_ATA y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_GENERIC y
-RUN ./scripts/config --set-val CONFIG_ATA_PIIX y
-RUN ./scripts/config --set-val CONFIG_IDE y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDE y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_IDEPCI y
-RUN ./scripts/config --set-val CONFIG_64BIT y
-RUN ./scripts/config --set-val CONFIG_BLK_DEV_SD y
-
-# Disabled because I was getting kernel panics in QEMU from some sort of tracing
-# self-tests.
-RUN ./scripts/config --set-val CONFIG_FTRACE_SELFTEST n
-RUN ./scripts/config --set-val CONFIG_FTRACE_STARTUP_TEST n
-RUN ./scripts/config --set-val CONFIG_EVENT_TRACE_STARTUP_TEST n
-RUN ./scripts/config --set-val CONFIG_FTRACE_SORT_STARTUP_TEST n
-RUN ./scripts/config --set-val CONFIG_MMIOTRACE_TEST n
-
-# Add these lines to Kbuild for reproducibility
-RUN echo 'KBUILD_BUILD_USER=a' >> Kbuild
-RUN echo 'KBUILD_BUILD_HOST=b' >> Kbuild
-RUN echo 'KBUILD_BUILD_TIMESTAMP="Sat 22 Jun 2024 03:54:20 PM EDT"' >> Kbuild
+ADD ./scripts/configure_kernel.sh ./configure_kernel.sh
+RUN chmod +x configure_kernel.sh \
+    && ./configure_kernel.sh \
+    && rm configure_kernel.sh
 
 # This is a Reproducible Builds standard
-ENV SOURCE_DATE_EPOCH=1719086180
-RUN make -j 4
+RUN SOURCE_DATE_EPOCH=1719086180 make -j 4
 
 RUN cp arch/x86/boot/bzImage /build
 
@@ -172,34 +102,24 @@ RUN mkdir -p initramfs/sbin
 RUN mkdir -p initramfs/usr/include/nolibc
 RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
 
-# TODO: Somebody online said you need:
-# gcc, make, binutils, perl, bc, a shell, tar, cpio, gzip, util-linux, kmod,
-# mkinitrd, squashfs-tools, and maybe flex, bison, and openssl.
+################################################################################
+#                                                                              #
+# In the following section, we pre-fetch the minimal dependencies we need to   #
+# build another Punchcard OS. Since the first pass of PunchcardOS will not     #
+# have any networking, it will be unable to fetch these dependencies remotely. #
+# Using these, dependencies, we can build a second pass of PunchcardOS that    #
+# does have networking.                                                        #
+#                                                                              #
+################################################################################
 
-# TODO: Fetch and build: https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27.tar.bz2
-# TODO: musl
-# TODO: glibc
-# TODO: gcc
-# TODO: bash
-# TODO: bc
-# TODO: minimake
-# TODO: elfutils
-# TODO: flex
-# TODO: bison
-# TODO: cpio
-# TODO: dwarves
-# TODO: perl
-# TODO: git
-# TODO: gpg
-# TODO: dosfstools
-# TODO: bzip2
-# TODO: xz-utils
-# TODO: tar
-# TODO: syslinux
-# TODO: util-linux
-# TODO: kmod? (Isn't that part of the kernel?)
-# TODO: disassembler
+# TODO: Build sha256sum and confirm hashes for all of the below.
+WORKDIR /build/initramfs/src
+ADD ./scripts/fetch_sources.sh ./fetch_sources.sh
+RUN chmod +x ./fetch_sources.sh \
+    && ./fetch_sources.sh \
+    && rm ./fetch_sources.sh
 
+WORKDIR /build
 # /init is hard-coded into the Linux kernel to run automatically when the
 # initramfs is loaded. We are using the shell as our init process.
 RUN cp initramfs/sh initramfs/init
