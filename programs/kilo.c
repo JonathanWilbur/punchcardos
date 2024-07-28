@@ -251,6 +251,17 @@ char *itoa(long in)
 
 #endif
 
+#define EXIT_USAGE              1
+#define EXIT_READ_KEY           2
+#define EXIT_HUGE_LINE          3
+#define EXIT_COULD_NOT_OPEN     4
+#define EXIT_WEIRD_ERR          5
+
+/* Normally, I would stay below these numbers out of an abundance of caution,
+but the Linux kernel itself outputs dmesg output that is much longer. */
+#define BACKUP_COLS 80
+#define BACKUP_ROWS 24
+
 /* Syntax highlight types */
 #define HL_NORMAL 0
 #define HL_NONPRINT 1
@@ -264,6 +275,8 @@ char *itoa(long in)
 
 #define HL_HIGHLIGHT_STRINGS (1 << 0)
 #define HL_HIGHLIGHT_NUMBERS (1 << 1)
+
+static int ioctl_errno = 0;
 
 struct editorSyntax
 {
@@ -409,10 +422,14 @@ void disableRawMode(int fd)
     }
 }
 
+void clearScreen() {
+    printf("\e[1;1H\e[2J");
+}
+
 /* Called at exit to avoid remaining in raw mode. */
 void editorAtExit(void)
 {
-    printf("\e[1;1H\e[2J");
+    clearScreen();
     disableRawMode(STDIN_FILENO);
 }
 
@@ -468,7 +485,8 @@ int editorReadKey(int fd)
     if (nread == -1)
     {
         editorAtExit();
-        exit(1);
+        puts("Failed to read key.");
+        exit(EXIT_READ_KEY);
     }
 
     while (1)
@@ -597,9 +615,23 @@ int getWindowSize(int *rows, int *cols)
     struct winsize ws;
     const int ifd = STDIN_FILENO;
     const int ofd = STDOUT_FILENO;
+    int ioctl_rc = 0;
 
-    if (ioctl(1, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+    /* ws_col == 0 happens on QEMU, when using -serial stdio. */
+    if ((ioctl_rc = ioctl(ofd, TIOCGWINSZ, &ws)) < 0 || ws.ws_col == 0)
     {
+        /* It seems that glibc sets the errno, but nolibc just returns ioctl's
+        return value directly, so the error will not always be -1. */
+#ifndef NOLIBC
+        ioctl_errno = errno;
+#else
+        ioctl_errno = ioctl_rc;
+#endif
+        /* If ws_col == 0 the subsequent reads of the Device Status Report
+        output are just going to jack up your terminal. Just abort. */
+        if (ws.ws_col == 0)
+            return -1;
+
         /* ioctl() failed. Try to query the terminal itself. */
         int orig_row, orig_col, retval;
 
@@ -890,9 +922,9 @@ void editorUpdateRow(erow *row)
         (unsigned long long)row->size + tabs * 8 + nonprint * 9 + 1;
     if (allocsize > UINT32_MAX)
     {
-        printf("Some line of the edited file is too long for kilo\n");
         editorAtExit();
-        exit(1);
+        puts("Some line of the edited file is too long for kilo");
+        exit(EXIT_HUGE_LINE);
     }
 
     row->render = malloc(row->size + tabs * 8 + nonprint * 9 + 1);
@@ -1172,8 +1204,10 @@ int editorOpen(char *filename)
     memcpy(E.filename, filename, fnlen);
 
     fd = open(filename, O_RDONLY);
-    if (fd <= 0)
-        exit(1);
+    if (fd <= 0) {
+        puts("Could not open file.");
+        exit(EXIT_COULD_NOT_OPEN);
+    }
     fp = fdopen(fd, "r"); // Mode is ignored, at least in nolibc.
     if (!fp)
     {
@@ -1182,7 +1216,7 @@ int editorOpen(char *filename)
             perror("Opening file");
             /* This exit does not need to call editorAtExit() because it happens
             before raw mode is set. */
-            exit(1);
+            exit(EXIT_WEIRD_ERR);
         }
         return 1;
     }
@@ -1743,7 +1777,7 @@ void editorProcessKeypress(int fd)
         editorMoveCursor(c);
         break;
     case CTRL_L: /* ctrl+l, clear screen */
-        /* Just refresht the line as side effect. */
+        /* Just refresh the line as side effect. */
         break;
     case ESC:
         /* Nothing to do for ESC in this mode. */
@@ -1765,9 +1799,9 @@ void updateWindowSize(void)
 {
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     {
-        perror("Unable to query the screen for size (columns / rows)");
-        editorAtExit();
-        exit(1);
+        clearScreen();
+        E.screenrows = BACKUP_ROWS;
+        E.screencols = BACKUP_COLS;
     }
     E.screenrows -= 2; /* Get room for status bar. */
 }
@@ -1806,15 +1840,22 @@ int main(int argc, char **argv)
     if (argc != 2)
     {
         fprintf(stderr, "Usage: kilo <filename>\n");
-        exit(1);
+        exit(EXIT_USAGE);
     }
 
     initEditor();
     editorSelectSyntaxHighlight(argv[1]);
     editorOpen(argv[1]);
     enableRawMode(STDIN_FILENO);
-    editorSetStatusMessage(
-        "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
+    if (ioctl_errno) {
+        char buf[80];
+        strcpy(buf, "Failed to get terminal size. errno=");
+        strcat(buf, itoa(errno));
+        editorSetStatusMessage(buf);
+    } else {
+        editorSetStatusMessage(
+            "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
+    }
     while (1)
     {
         editorRefreshScreen();
