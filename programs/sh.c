@@ -83,6 +83,8 @@ char *strtok_r (char *s, const char *delim, char **save_ptr)
 
 // TODO: Format this file.
 
+static int last_exit = 0;
+
 /*
   Function Declarations for builtin shell commands:
  */
@@ -186,6 +188,9 @@ int lsh_launch(char **args)
     do {
       waitpid(pid, &status, WUNTRACED);
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+    if (WIFEXITED(status)) {
+        last_exit = WEXITSTATUS(status);
+    }
   }
 
   return 1;
@@ -308,7 +313,7 @@ void lsh_loop(void)
   int status;
 
   do {
-    printf("> ");
+    printf("%d> ", last_exit);
     line = lsh_read_line();
     args = lsh_split_line(line);
     status = lsh_execute(args);
