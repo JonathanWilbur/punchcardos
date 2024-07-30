@@ -31,7 +31,8 @@ gpg --import /pgp/mroth.gpg
 # gcc, make, binutils, perl, bc, a shell, tar, cpio, gzip, util-linux, kmod,
 # mkinitrd, squashfs-tools, and maybe flex, bison, and openssl.
 
-curl https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27.tar.bz2 -o tcc.tar.bz2
+# curl -L https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27.tar.bz2 -o tcc.tar.bz2
+curl https://repo.or.cz/tinycc.git/snapshot/08a4c52de39b202f02d1ec525c64336d11ad9ccf.tar.gz -o tcc.tar.gz
 # There is no signature to go along with this version.
 # TODO: Verify hash never changes.
 
@@ -239,6 +240,12 @@ curl https://mirrors.edge.kernel.org/pub/linux/utils/kernel/kmod/kmod-32.tar.xz 
 curl https://mirrors.edge.kernel.org/pub/linux/utils/kernel/kmod/kmod-32.tar.sign -o kmod.tar.sign
 xz -cd kmod.tar.xz | gpg --verify kmod.tar.sign -
 
+# This isn't needed to build the Linux Kernel, but it _is_ needed to install the headers
+# TODO: It might be possible to write a tool that does what this does. It is only used in one place.
+RUN curl https://download.samba.org/pub/rsync/src/rsync-3.3.0.tar.gz -o rsync.tar.gz
+RUN curl https://download.samba.org/pub/rsync/src/rsync-3.3.0.tar.gz.asc -o rsync.tar.gz.asc
+gpg --verify rsync.tar.gz.asc rsync.tar.gz
+
 git clone https://github.com/oriansj/stage0.git
 cd /build/initramfs/src/stage0
 git checkout a5ba3acfde3111bda674212361e6e3e5f9379c4c
@@ -261,6 +268,16 @@ git clone https://github.com/oriansj/M2libc
 cd /build/initramfs/src/M2libc
 git checkout 3a700010872697c4be9e3fab3cf707fce706741e
 # TODO: Verify hash
+cd /build/initramfs/src
+
+git clone https://github.com/JonathanWilbur/straplibc.git
+cd /build/initramfs/src/straplibc
+# TODO: Check out specific hash and verify it
+cd /build/initramfs/src
+
+git clone https://github.com/JonathanWilbur/libsyscall.git
+cd /build/initramfs/src/libsyscall
+# TODO: Check out specific hash and verify it
 cd /build/initramfs/src
 
 # ~~util-linux~~ I am going to consider ./programs/mount "good enough."
