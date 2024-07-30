@@ -414,7 +414,7 @@ eliminate is the GCC-style inline assembly.
 - [ ] Tools for blacklisting or removing modules?
 - [ ] Syslinux configuration
 - [ ] Clear kernel ring buffer messages from screen
-- [ ] Get a working C compiler
+- [x] Get a working C compiler
 - [ ] Shuffle kernel syscall numbers so malicious hardware is clueless
 - [ ] Make a linker
 - [ ] Make an assembler
@@ -428,3 +428,10 @@ eliminate is the GCC-style inline assembly.
 - [ ] Use `seccomp()`
 - [ ] Use `chroot()`
 - [ ] Document special / non-standard programs
+- [ ] Use TPM for some RNG
+- [ ] Configure Integrity Management Architecture (IMA)?
+- [ ] [`no_new_privs`](https://docs.kernel.org/userspace-api/no_new_privs.html)
+- [ ] Use Landlock
+- [ ] Drop capabilities
+- [ ] `setcap` / `getcap` programs
+- [ ] Executable minification

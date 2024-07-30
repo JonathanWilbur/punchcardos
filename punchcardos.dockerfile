@@ -14,7 +14,8 @@ LABEL description="PunchcardOS: A minimal Unix-like distro for bootstrapping a t
 # TODO: I think I can get rid of bc by writing my own.
 # The only place where the Kernel uses it for building is here: kernel/time/timeconst.bc.
 # (It is used a lot for tests, I think.)
-ENV KERNEL_REQS="make gcc flex bison libelf-dev bc binutils"
+# rsync is required to install headers, but not to build the Kernel itself.
+ENV KERNEL_REQS="make gcc flex bison libelf-dev bc binutils rsync"
 ENV KERNEL_OPT="libncurses-dev"
 ENV KERNEL_UNK="cpio clang dwarves jfsutils reiserfsprogs xfsprogs btrfs-progs libssl-dev"
 # Currently, all of the below are used, except maybe vim. IDK why I included it.
@@ -76,6 +77,9 @@ RUN chmod +x configure_kernel.sh \
 # This is a Reproducible Builds standard
 RUN SOURCE_DATE_EPOCH=1719086180 make -j 4
 
+RUN mkdir /build/stage/linux-headers
+RUN make headers_install ARCH=x86 INSTALL_HDR_PATH=/build/initramfs/usr
+
 RUN cp arch/x86/boot/bzImage /build
 
 RUN mv /linux.tar.xz /build/files
@@ -89,8 +93,9 @@ ADD /licenses/* /build/initramfs/lic
 RUN mkdir -p /build/initramfs/src/punchcard
 ADD /programs/* /build/initramfs/src/punchcard
 
+# Build minimal programs to use our minimal system call interface as well as straplibc.
 ENV NOLIBC_INC="-include /build/stage/src/linux/tools/include/nolibc/nolibc.h"
-ENV NOLIBC_FLAGS="-static -fno-asynchronous-unwind-tables -fno-ident -s -Os -nostdlib"
+ENV NOLIBC_FLAGS="-static -Os -nostdlib"
 WORKDIR /build
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/cat /build/initramfs/src/punchcard/cat.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/sh /build/initramfs/src/punchcard/sh.c
@@ -99,8 +104,8 @@ RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/c4 /build/initramfs/src/punch
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/kilo /build/initramfs/src/punchcard/kilo.c
 
 RUN mkdir -p initramfs/sbin
-RUN mkdir -p initramfs/usr/include/nolibc
-RUN cp /build/stage/src/linux/tools/include/nolibc/* initramfs/usr/include/nolibc
+RUN mkdir -p initramfs/usr/include
+RUN cp -R /build/stage/src/linux/tools/include/nolibc initramfs/usr/include
 
 ################################################################################
 #                                                                              #
@@ -119,12 +124,32 @@ RUN chmod +x ./fetch_sources.sh \
     && ./fetch_sources.sh \
     && rm ./fetch_sources.sh
 
+# Build our minimal system calls interface
+RUN mkdir -p /build/initramfs/lib
+RUN gcc /build/initramfs/src/libsyscall/syscall-x86-64.s -c -o /build/stage/syscall.o
+RUN ar rcs /build/initramfs/lib/libsyscall.a /build/stage/syscall.o
+
+RUN mkdir /build/initramfs/src/tcc
+RUN tar --strip-components=1 -C /build/initramfs/src/tcc -xvf tcc.tar.gz
+WORKDIR /build/initramfs/src/tcc
+ADD ./tinycc_undef_fn_macros.patch ./tinycc_undef_fn_macros.patch
+RUN git apply tinycc_undef_fn_macros.patch
+ADD ./tinycc_exec_fns.patch ./tinycc_exec_fns.patch
+RUN git apply tinycc_exec_fns.patch
+
+# TODO: This statically links glibc! There is no escape!
+RUN ./configure --enable-static --extra-cflags=-static --extra-ldflags=-static
+RUN make
+RUN mv ./tcc /build/initramfs/cc
 WORKDIR /build
 # /init is hard-coded into the Linux kernel to run automatically when the
 # initramfs is loaded. We are using the shell as our init process.
 RUN cp initramfs/sh initramfs/init
 
 RUN chmod +x initramfs/init
+
+# TODO: Investigate why this works, but the static library (libsyscall.a) does not.
+RUN cp /build/stage/syscall.o /build/initramfs/lib/syscall.o
 
 # NOTE: You have to cd into the initramfs folder so that `find .` does not
 # return a list of entries that begin with `./initramfs/`, otherwise, your

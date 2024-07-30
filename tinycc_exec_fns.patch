@@ -1,0 +1,26 @@
+diff --git a/tccgen.c b/tccgen.c
+index a1c7db47..f492651f 100644
+--- a/tccgen.c
++++ b/tccgen.c
+@@ -8303,6 +8309,7 @@ static void gen_function(Sym *sym)
+     cur_scope = root_scope = &f;
+     nocode_wanted = 0;
+ 
++    cur_text_section->sh_flags |= SHF_EXECINSTR;
+     ind = cur_text_section->data_offset;
+     if (sym->a.aligned) {
+ 	size_t newoff = section_add(cur_text_section, 0,
+diff --git a/tccasm.c b/tccasm.c
+index d056c703..a75661e4 100644
+--- a/tccasm.c
++++ b/tccasm.c
+@@ -893,6 +893,9 @@ static void asm_parse_directive(TCCState *s1, int global)
+ 	    if (old_nb_section != s1->nb_sections)
+ 	        cur_text_section->sh_addralign = 1;
+         }
++        /* The section directive supports flags, but they are unsupported.
++        For now, just assume any section contains code. */
++        cur_text_section->sh_flags |= SHF_EXECINSTR;
+         break;
+     case TOK_ASMDIR_previous:
+         { 
