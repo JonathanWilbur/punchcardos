@@ -203,6 +203,25 @@ end of the above Syslinux prompt, and hit `ENTER`. You should see a shell
 appear in either the graphical QEMU window, or in the terminal where you ran
 QEMU. Type `ls` and hit `ENTER`. If you see a listing of entries, it booted!
 
+## Compiling within PunchcardOS
+
+Since PunchcardOS only comes with a minimally working C compiler, you will need
+to compile a C program to build anything else. As an example, you can compile a
+program using the Tiny C compiler using a command like:
+
+```bash
+cc -nostdlib -static -g -include /src/straplibc/src/nolibc.h \
+  /lib/syscall.o /src/tcc/lib/va_list.o /src/punchcard/ls.c
+```
+
+You might need to include `/src/tcc/lib/va_list.o`. The compiled binary does not
+have access to the `__va_arg` symbol without this for some reason (to be
+investigated).
+
+`/lib/syscall.o` is a pre-compiled ELF object allowing you to make system calls
+using `straplibc`. `straplibc` is an even smaller `nolibc` that was specifically
+tailed for bootstrapping purposes.
+
 ### On Physical Hardware
 
 PunchcardOS is yet to have been tested on physical hardware.
