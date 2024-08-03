@@ -431,7 +431,7 @@ eliminate is the GCC-style inline assembly.
 
 - [ ] Is it possible to make single-file `binutils` / `elfutils` commands?
 - [ ] Tools for blacklisting or removing modules?
-- [ ] Syslinux configuration
+- [x] Syslinux configuration
 - [ ] Clear kernel ring buffer messages from screen
 - [x] Get a working C compiler
 - [ ] Shuffle kernel syscall numbers so malicious hardware is clueless

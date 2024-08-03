@@ -151,6 +151,9 @@ RUN chmod +x initramfs/init
 # TODO: Investigate why this works, but the static library (libsyscall.a) does not.
 RUN cp /build/stage/syscall.o /build/initramfs/lib/syscall.o
 
+RUN mkdir -p /build/initramfs/boot/syslinux/
+ADD files/syslinux.cfg /build/syslinux.cfg
+
 # NOTE: You have to cd into the initramfs folder so that `find .` does not
 # return a list of entries that begin with `./initramfs/`, otherwise, your
 # entire initramfs is going to be in a folder called `initramfs` when extracted!
