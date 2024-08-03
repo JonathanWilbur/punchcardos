@@ -95,7 +95,7 @@ ADD /programs/* /build/initramfs/src/punchcard
 
 # Build minimal programs to use our minimal system call interface as well as straplibc.
 ENV NOLIBC_INC="-include /build/stage/src/linux/tools/include/nolibc/nolibc.h"
-ENV NOLIBC_FLAGS="-static -Os -nostdlib"
+ENV NOLIBC_FLAGS="-g -static -Os -nostdlib"
 WORKDIR /build
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/cat /build/initramfs/src/punchcard/cat.c
 RUN gcc ${NOLIBC_FLAGS} ${NOLIBC_INC} -o initramfs/sh /build/initramfs/src/punchcard/sh.c
