@@ -169,7 +169,8 @@ lsmod > mods
 docker build . -t pcosbuild -f ./punchcardos.dockerfile
 
 # Privileged step required to mount filesystem.
-sudo docker run --privileged pcosbuild bash -c 'mkdir m && mount boot m && cp bzImage init.cpio files/* m && umount m'
+sudo docker run --privileged pcosbuild bash \
+-c 'mkdir m && mount boot m && cp bzImage init.cpio syslinux.cfg files/* m && umount m'
 
 # This gets the ID of the most recent pcosbuild container.
 CONTAINER_ID=$(docker ps --format 'table {{.ID}} {{.Image}}' -a | grep pcosbuild | head -n1 | cut -d ' ' -f1)
