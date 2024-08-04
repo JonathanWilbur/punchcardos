@@ -2,6 +2,8 @@
 Source: https://github.com/brenns10/lsh/tree/master
 License: UNLICENSE at the time of copying.
 */
+#include <sys/klog.h>        /* Definition of SYSLOG_* constants */
+#include <sys/syscall.h>     /* Definition of SYS_* constants */
 #ifndef NOLIBC
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -9,6 +11,11 @@ License: UNLICENSE at the time of copying.
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef __GLIBC__
+#include <sys/klog.h>
+#endif
+
 #else
 
 size_t strspn (const char *str, const char *accept) {
@@ -79,6 +86,20 @@ char *strtok_r (char *s, const char *delim, char **save_ptr)
     return s;
 }
 
+int syslog (int type, char *bufp, int len) {
+    return my_syscall3(__NR_syslog, type, bufp, len);
+}
+
+#endif
+
+/*
+From the man page for syslog(2):
+"The symbolic names are defined in the kernel source, but are not exported to
+user space; you will either need to use the numbers, or define the names
+yourself."
+*/
+#ifndef SYSLOG_ACTION_CONSOLE_OFF
+#define SYSLOG_ACTION_CONSOLE_OFF   6
 #endif
 
 // TODO: Format this file.
@@ -331,6 +352,14 @@ void lsh_loop(void)
  */
 int main(int argc, char **argv)
 {
+    /* These next lines silence the kernel ring buffer messages from being
+    displayed on the console. While annoying, it is not necessary to handle, so
+    we just ignore the return value. */
+#ifdef NOLIBC
+    syslog(SYSLOG_ACTION_CONSOLE_OFF, NULL, 0);
+#elif defined(__GLIBC__)
+    klogctl(SYSLOG_ACTION_CONSOLE_OFF, NULL, 0);
+#endif
   // Load config files, if any.
 
   // Run command loop.
