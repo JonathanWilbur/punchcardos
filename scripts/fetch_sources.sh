@@ -24,6 +24,7 @@ gpg --import /pgp/gnupg.gpg
 gpg --import /pgp/junio-hamano.gpg      # Git SCM
 gpg --import /pgp/astikonas.asc         # Some bootstrapping things
 gpg --import /pgp/wayne-davison.gpg     # Rsync
+gpg --import /pgp/westes.gpg            # Flex
 
 # Used for QEMU.
 # Obtained from: https://keys.openpgp.org/vks/v1/by-fingerprint/CEACC9E15534EBABB82D3FA03353C9CEF108B584
@@ -42,10 +43,9 @@ curl -vL https://repo.or.cz/tinycc.git/snapshot/08a4c52de39b202f02d1ec525c64336d
 # TODO: Verify hash never changes.
 
 # I cannot find the damn keys for this guy.
-# curl -vL https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz -o flex.tar.gz
-# curl -vL https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz.sig -o flex.tar.gz.sig
-# gpg --verify flex.tar.gz.sig flex.tar.gz
-# TODO: verify hash
+curl -vL https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz -o flex.tar.gz
+curl -vL https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz.sig -o flex.tar.gz.sig
+gpg --verify flex.tar.gz.sig flex.tar.gz
 
 # Signed by lcollin.gpg
 curl -vL https://github.com/tukaani-project/xz/releases/download/v5.6.2/xz-5.6.2.tar.gz -o xz.tar.gz
@@ -290,3 +290,4 @@ cd /build/initramfs/src/libsyscall
 cd /build/initramfs/src
 
 # ~~util-linux~~ I am going to consider ./programs/mount "good enough."
+#
