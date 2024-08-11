@@ -1,4 +1,12 @@
-/* Minimal readelf implementation. */
+/*
+Minimal readelf implementation by Jonathan M. Wilbur <jonathan@wilbur.space>.
+Build using: gcc -g -include ./lib/elf.h ./programs/readelf.c
+Build against nolibc using:
+gcc -static -nostdlib -g -include PATH_TO_LINUX/tools/include/nolibc/nolibc.h -include lib/elf.h ./programs/readelf.c
+
+
+*/
+/*  */
 #include "elf.h"
 #ifndef NOLIBC
 #include <stdio.h>
@@ -69,9 +77,8 @@ static int print_hexdump_line (unsigned char* bytes, size_t count, size_t indent
         buf[b++] = to_hex_char(bytes[i] & '\x0F');
         buf[b++] = ' ';
     }
-    // FIXME: Somehow an aberrant character is making its way in.
-    while (b++ < 47 + indent)
-        buf[b] = ' ';
+    while (b <= 47 + indent)
+        buf[b++] = ' ';
     buf[b++] = '|';
     for (int i = 0; i < count; i++) {
         if (isprint(bytes[i])) {
@@ -97,8 +104,6 @@ static int print_hexdump (char *bytes, size_t count, size_t indent) {
     return EXIT_SUCCESS;
 }
 
-// TODO: Elf64_Addr	e_entry;		/* Entry point virtual address */
-// TODO: Elf64_Word	e_flags;		/* Processor-specific flags */
 static int print_ehdr64 (Elf64_Ehdr header) {
     if (header.e_ident[EI_VERSION] != 1 || header.e_version != 1) {
         // No other version is defined.
@@ -167,7 +172,7 @@ static int print_ehdr64 (Elf64_Ehdr header) {
         default: break;
     }
 
-    putchar('\n');
+    printf(" entry@0x%llx flags=0x%lx\n", header.e_entry, header.e_flags);
 
     return EXIT_SUCCESS;
 }
@@ -251,10 +256,8 @@ static int print_phdr64 (Elf64_Phdr header) {
     putchar(']');
     printf(" phys=0x%lX virt=0x%lX", header.p_paddr, header.p_vaddr);
     printf(" memory=%ld align=%ld", header.p_memsz, header.p_align);
-    // TODO: Print segment contents.
-    // Elf64_Off	    p_offset;   /* Segment file offset */
-    // Elf64_Xword	    p_filesz;   /* Segment size in file */
-
+    /* We do not print the segment contents, because that should already be
+    printed as part of the section contents. */
     putchar('\n');
     return EXIT_SUCCESS;
 }
@@ -414,7 +417,7 @@ static int print_shdr64 (Elf64_Shdr header) {
     }
     putchar(']');
 
-    printf(" addr=0x%lX align=0x%lX link=0x%X info=0x%X entsize=%lu",
+    printf(" addr=0x%lx align=0x%lx link=0x%x info=0x%x entsize=%lu",
         header.sh_addr,
         header.sh_addralign,
         header.sh_link,
@@ -472,7 +475,6 @@ static int main64 (int fd, char* path) {
         if (print_phdr64(phdr) != EXIT_SUCCESS) {
             return EXIT_FAILURE;
         }
-        // TODO: Print segment data bytes.
     }
 
     // Get a new independent FD to the ELF file.
@@ -511,7 +513,6 @@ static int main64 (int fd, char* path) {
         return EXIT_FAILURE;
     }
 
-    // TODO: Bail if 0
     e_shnum = header.e_shnum;
     if (lseek(fd, header.e_shoff, SEEK_SET) != header.e_shoff) {
         return EXIT_FAILURE;
@@ -539,6 +540,7 @@ static int main64 (int fd, char* path) {
         if (read(fd2, section_bytes, shdr.sh_size) != shdr.sh_size) {
             return EXIT_FAILURE;
         }
+        // TODO: Switch behavior based on section type.
         print_hexdump(section_bytes, shdr.sh_size, 4);
         free(section_bytes);
     }

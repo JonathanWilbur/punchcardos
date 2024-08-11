@@ -415,6 +415,12 @@ can make nolibc work. See comments in `./programs/chibicc.c`. I _might_ be able
 to make this work by using a modified nolibc. The biggest thing I need to
 eliminate is the GCC-style inline assembly.
 
+### Segfault in `strlen` when using nolibc
+
+Make sure you are using recognized format specifiers in printf and the like. The
+segfault was happening because I was using `%X`, when only `%x` was supported.
+I need to report this. I don't think it should do this.
+
 ## See Also
 
 - https://github.com/keiranrowan/tiny-core
@@ -433,7 +439,7 @@ eliminate is the GCC-style inline assembly.
 - [ ] Is it possible to make single-file `binutils` / `elfutils` commands?
 - [ ] Tools for blacklisting or removing modules?
 - [x] Syslinux configuration
-- [ ] Clear kernel ring buffer messages from screen
+- [x] Clear kernel ring buffer messages from screen
 - [x] Get a working C compiler
 - [ ] Shuffle kernel syscall numbers so malicious hardware is clueless
 - [ ] Make a linker
