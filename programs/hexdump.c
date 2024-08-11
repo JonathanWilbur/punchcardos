@@ -1,8 +1,7 @@
 /* Minimal hexdump implementation by Jonathan M. Wilbur <jonathan@wilbur.space>.
 This was written in such a way to maximize the number of functions so that the
 compiled ELF binary is as auditable / understandable / inspectable as possible
-(assuming symbols are included).
-*/
+(assuming symbols are included). Tested with glibc and nolibc. */
 #ifndef NOLIBC
 #include <stdint.h>
 #include <fcntl.h>
