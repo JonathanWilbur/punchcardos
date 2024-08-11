@@ -39,29 +39,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #endif
 
-int
-main(int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
-	int idx;
-	int nflag;
+	int idx = 1;
+	int nflag = 0;
 
-	nflag = 0;
-	idx = 1;
-	if (strcmp(argv[idx], "-n") == 0)
-	{
+	if (strcmp(argv[idx], "-n") == 0) {
 		nflag = 1;
 		idx++;
 	}
 
-	while (idx < argc)
-	{
+	while (idx < argc) {
 		if (idx > 1)
 			putchar(' ');
 		fputs(argv[idx++], stdout);
 	}
 	if (!nflag)
-	{
 		putchar('\n');
-	}
-	return (EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
