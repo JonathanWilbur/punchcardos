@@ -8,6 +8,7 @@ Jonathan M. Wilbur modified this code a lot:
 - Porting to work with nolibc
 
 */
+#ifndef NOLIBC
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -18,6 +19,178 @@ Jonathan M. Wilbur modified this code a lot:
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
+#else
+#define BUFSIZ 8192
+#define	R_OK	4		/* Test for read permission.  */
+#define	W_OK	2		/* Test for write permission.  */
+#define	X_OK	1		/* Test for execute permission.  */
+#define	F_OK	0		/* Test for existence.  */
+#define _NSIG 65
+
+#define TTY_NAME_MAX 32
+
+char *getcwd (char *buf, size_t size) {
+    return (char *)my_syscall2(__NR_getcwd, buf, size);
+}
+
+typedef unsigned char cc_t;
+typedef unsigned int speed_t;
+typedef unsigned int tcflag_t;
+
+#define NCCS 32
+struct termios
+{
+    tcflag_t c_iflag; /* input mode flags */
+    tcflag_t c_oflag; /* output mode flags */
+    tcflag_t c_cflag; /* control mode flags */
+    tcflag_t c_lflag; /* local mode flags */
+    cc_t c_line;      /* line discipline */
+    cc_t c_cc[NCCS];  /* control characters */
+    speed_t c_ispeed; /* input speed */
+    speed_t c_ospeed; /* output speed */
+#define _HAVE_STRUCT_TERMIOS_C_ISPEED 1
+#define _HAVE_STRUCT_TERMIOS_C_OSPEED 1
+};
+
+int tcgetattr(int fd, struct termios *term)
+{
+    return ioctl(fd, TCGETS, term);
+}
+
+int isatty(int fd)
+{
+    struct termios term;
+    return tcgetattr(fd, &term) == 0;
+}
+
+// Copied from musl libc.
+void __procfdname(char *buf, unsigned fd)
+{
+	unsigned i, j;
+	for (i=0; (buf[i] = "/proc/self/fd/"[i]); i++);
+	if (!fd) {
+		buf[i] = '0';
+		buf[i+1] = 0;
+		return;
+	}
+	for (j=fd; j; j/=10, i++);
+	buf[i] = 0;
+	for (; fd; fd/=10) buf[--i] = '0' + fd%10;
+}
+
+// Copied from musl libc.
+ssize_t readlink(const char *pathname, char *buf, size_t bufsiz) {
+    return (ssize_t)my_syscall3(__NR_readlink, pathname, buf, bufsiz);
+}
+
+// Copied from musl libc, but part of the function removed.
+int ttyname_r(int fd, char *name, size_t size)
+{
+	struct stat st1;
+	char procname[sizeof "/proc/self/fd/" + 3*sizeof(int) + 2];
+	ssize_t l;
+
+	if (!isatty(fd))
+        return errno;
+	__procfdname(procname, fd);
+	l = readlink(procname, name, size);
+	if (l < 0)
+        return errno;
+	else if (l == size)
+        return ERANGE;
+	name[l] = 0;
+	return 0;
+}
+
+// Copied from musl libc.
+char *ttyname(int fd)
+{
+	static char buf[TTY_NAME_MAX];
+	int result;
+	if ((result = ttyname_r(fd, buf, sizeof buf))) {
+		errno = result;
+		return NULL;
+	}
+	return buf;
+}
+
+static long __syscall_ret(unsigned long r)
+{
+	if (r > -4096UL) {
+		errno = -r;
+		return -1;
+	}
+	return r;
+}
+
+int access(const char *pathname, int mode) {
+    return __syscall_ret(my_syscall2(__NR_access, pathname, mode));
+}
+
+static int unmask_done = 0;
+static unsigned long handler_set[_NSIG/(8*sizeof(long))];
+
+#if !defined(__x86_64__) && !defined(__LP64__) && !defined(_LP64) && (__WORDSIZE != 64)
+#error "This will not work on non-64 bit systems, and possibly not on anything other tha x86-64. Sorry!"
+#endif
+
+// I calculated what this would be on 64 bit syntax.
+const char sigpt_bytes[8] = { 0, 0, 0, 0, 3, 0, 0, 0 };
+const sigset_t *SIGPT_SET = (sigset_t *)sigpt_bytes;
+
+struct k_sigaction {
+	void (*handler)(int);
+	unsigned long flags;
+#ifdef SA_RESTORER
+	void (*restorer)(void);
+#endif
+	unsigned mask[2];
+#ifndef SA_RESTORER
+	void *unused;
+#endif
+};
+
+extern void __restore_rt();
+#define __restore __restore_rt
+
+/* This MUST be explicitly put in the .text section, otherwise, it will end up
+in the .data section and NOT be executable. I was getting very difficult to
+diagnose segfaults because of this. */
+__asm__(
+".section .text\n"
+"   nop\n"
+".global __restore_rt\n"
+".type __restore_rt,@function\n"
+"__restore_rt:\n"
+"	mov $15, %rax\n"
+"	syscall\n"
+".size __restore_rt,.-__restore_rt\n"
+);
+
+extern void __restore_rt ();
+
+int sigaction(int sig, const struct sigaction *restrict sa, struct sigaction *restrict old)
+{
+    struct k_sigaction ksa;
+
+    if ((uintptr_t)sa->sa_handler > 1UL) {
+        if (!unmask_done) {
+            my_syscall4(__NR_rt_sigprocmask, SIG_UNBLOCK, SIGPT_SET, 0, _NSIG/8);
+            unmask_done = 1;
+        }
+    }
+    ksa.handler = sa->sa_handler;
+    ksa.flags = sa->sa_flags;
+#ifdef SA_RESTORER
+    ksa.flags |= SA_RESTORER;
+    ksa.restorer = __restore_rt;
+#endif
+    memcpy(&ksa.mask, &sa->sa_mask, _NSIG/8);
+	int r = my_syscall4(__NR_rt_sigaction, sig, &ksa, NULL, _NSIG / 8);
+	return __syscall_ret(r);
+}
+
+#endif
 
 static char linebuf[BUFSIZ];
 static int linebufsize = 0;
@@ -28,7 +201,6 @@ static char* readline (char* prompt) {
     char *line;
 
     write(STDOUT_FILENO, prompt, strlen(prompt)); // Intentionally ignoring errors.
-
     while ((c = getchar()) != EOF) {
         if (c == '\r')
             continue;
@@ -36,25 +208,23 @@ static char* readline (char* prompt) {
             break;
         linebuf[linebufsize++] = (char)c;
     }
-    
     line = malloc(linebufsize + 1);
-    if (line == NULL) {
-        return NULL;
-    }
+    if (line == NULL)
+        return "";
     memcpy(line, linebuf, linebufsize);
     line[linebufsize] = 0; // Add null terminator.
     linebufsize = 0;
-
     return line;
+}
+
+static void reset_line () {
+    linebufsize = 0;
 }
 
 #define TRUE 1
 #define FALSE 0
 
 #define PROMPT "minibash $> "
-
-#define READ 0
-#define WRITE 1
 
 #define ADD 1
 #define APPEND 2
@@ -126,10 +296,8 @@ int ft_open(char *path, int oflag, int mode);
 void ft_close(int fildes);
 void ft_pipe(int fd[2]);
 void ft_dup(int fildes);
-void ft_wait(int *stat_loc);
 void ft_dup2(int fildes, int fildes2);
 void ft_execve(char *path, char **argv);
-void ft_waitpid(pid_t pid);
 pid_t ft_fork(void);
 
 #define EXIT_SYNTAX 258
@@ -1018,7 +1186,7 @@ void shell_loop(void) {
         }
         ignore_signals();
         execute(cmd);
-        free(line); // TODO: Will this be a problem with readline?
+        free(line); // TODO: Can you free, since it was added to history?
     }
 }
 
@@ -1028,7 +1196,7 @@ static int history_size = 0;
 
 // Jonathan Wilbur's sick invention.
 static void add_history (char *line) {
-    history[history_size] = line;
+    history[history_size++] = line;
 }
 
 static void ft_add_history(char *line) {
@@ -1054,14 +1222,14 @@ static int is_space(char c) {
 //  the actual content of the buffer
 void handle_parent_sigint(int sig) {
     (void)sig;
-    write(1, "\n", 1);
+    write(STDOUT_FILENO, "\n", 1);
     g_global.exit_status = 1;
+    reset_line();
     // FIXME: This might be broken.
     // rl_on_new_line();
     // rl_replace_line("", 0);
     // rl_redisplay();
 }
-
 void handle_signals(void) {
     struct sigaction sa_sigint;
     struct sigaction sa_sigquit;
@@ -1101,24 +1269,24 @@ void sigint_heredoc(void) {
 
 void ft_close(int fd) {
     if (close(fd) == -1)
-        ft_exit(errno, strerror(errno));
+        ft_exit(errno, ft_itoa(errno));
 }
 
 void ft_dup(int fd) {
     if (dup(fd) == -1)
-        ft_exit(errno, strerror(errno));
+        ft_exit(errno, ft_itoa(errno));
 }
 
 void ft_dup2(int oldfd, int newfd) {
     if (dup2(oldfd, newfd) == -1)
-        ft_exit(errno, strerror(errno));
+        ft_exit(errno, ft_itoa(errno));
 }
 
 void ft_execve(char *path, char **argv) {
     if (execve(path, argv, dynamic_env()) == -1) {
-        ft_putstr_fd("rmshell: ", STDERR_FILENO);
-        ft_putstr_fd(argv[0], STDERR_FILENO);
-        ft_putstr_fd(": No such file or directory\n", STDERR_FILENO);
+        ft_putstr_fd("minibash: ", STDERR_FILENO);
+        ft_putstr_fd(path, STDERR_FILENO);
+        perror(path);
         exit(errno);
     }
 }
@@ -1143,29 +1311,7 @@ int ft_open(char *path, int flags, int mode) {
 
 void ft_pipe(int fd[2]) {
     if (pipe(fd) == -1)
-        ft_exit(errno, strerror(errno));
-}
-
-void ft_waitpid(pid_t pid) {
-    int status;
-
-    if (waitpid(pid, &status, 0) == -1)
-        ft_exit(WEXITSTATUS(status), strerror(errno));
-}
-
-void ft_wait(int *status) {
-    if (wait(status) == -1)
-        ft_exit(errno, strerror(errno));
-}
-
-void ft_wait3(int *status, int options, struct rusage *rusage) {
-    if (wait3(status, options, rusage) == -1)
-        ft_exit(errno, strerror(errno));
-}
-
-void ft_wait4(pid_t pid, int *status, int options, struct rusage *rusage) {
-    if (wait4(pid, status, options, rusage) == -1)
-        ft_exit(errno, strerror(errno));
+        ft_exit(errno, ft_itoa(errno));
 }
 
 int is_upper(char c) {
@@ -1252,8 +1398,9 @@ static void ft_bzero(void *p, size_t bytes) {
 
 void ft_exit(int status, char *msg) {
     if (msg) {
-        ft_putstr_fd(msg, 2);
-        ft_putstr_fd("\n", 2);
+        ft_putstr_fd("Error code: ", STDERR_FILENO);
+        ft_putstr_fd(msg, STDERR_FILENO);
+        ft_putstr_fd("\n", STDERR_FILENO);
     }
     exit(status);
 }
@@ -2558,6 +2705,8 @@ t_token *word_spliting(t_token *token) {
 t_global g_global;
 void init_global(char **envp);
 
+// TODO: Remove built-ins
+// TODO: Make scripting supported.
 int main(int argc, char **argv, char *envp[]) {
     (void)argc;
     (void)argv;
