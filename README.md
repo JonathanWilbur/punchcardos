@@ -436,6 +436,28 @@ I need to report this. I don't think it should do this.
 
 ## To Do
 
+- [ ] MVP
+  - [ ] `minias`
+  - [ ] `elfread`
+    - [ ] Print symbols
+    - [ ] Print symbols in executable code
+    - [ ] Print relocations
+  - [ ] `ld`
+  - [x] `minibash`
+  - [ ] `peg/leg`
+  - [x] `hexdump`
+  - [ ] `hunt`
+  - [ ] `peck`
+  - [ ] `pex` (Peck, but for Hex)
+  - [ ] `ar`
+  - [x] `minised`
+  - [x] ~~`miniawk`~~
+    - This is too heavily dependent on regex and math. It will have to compile against `musl`.
+  - [ ] `cpio`
+  - [ ] A bootloader
+  - [ ] `syslinux`
+  - [ ] `mtools`
+  - [ ] Some hashing program
 - [ ] Is it possible to make single-file `binutils` / `elfutils` commands?
 - [ ] Tools for blacklisting or removing modules?
 - [x] Syslinux configuration
@@ -461,3 +483,135 @@ I need to report this. I don't think it should do this.
 - [ ] Drop capabilities
 - [ ] `setcap` / `getcap` programs
 - [ ] Executable minification
+- [ ] Programs
+  - [x] `arch`
+  - [ ] `asn1parse`
+  - [ ] `awk`
+  - [x] `basename`
+  - [x] `bc4linux`
+  - [ ] `bc`
+  - [ ] `[`
+  - [ ] `c4`
+  - [x] `cat`
+  - [ ] `chgrp`
+  - [ ] `chibicc`
+  - [ ] `chmod`
+  - [ ] `chown`
+  - [ ] `chroot`
+  - [ ] `cksum`
+  - [x] `clear`
+  - [ ] `cmp`
+  - [ ] `col`
+  - [ ] `colrm`
+  - [ ] `comm`
+  - [x] `cowsay`
+  - [ ] `cpio`
+  - [ ] `cut`
+  - [x] `date`
+  - [ ] `dd`
+  - [ ] `diff3`
+  - [ ] `diff`
+  - [x] `dirname`
+  - [ ] `dmesg`
+  - [x] `echo`
+  - [ ] `edit`
+  - [ ] `enc`
+  - [ ] `env`
+  - [ ] `expand`
+  - [ ] `expr`
+  - [x] `false`
+  - [ ] `file`
+  - [ ] `find`
+  - [ ] `fmt`
+  - [ ] `fold`
+  - [ ] `getcap`
+  - [ ] `getconf`
+  - [ ] `getopt`
+  - [ ] `grep`
+  - [ ] `groff`
+  - [ ] `groups`
+  - [ ] `halt`
+  - [x] `head`
+  - [x] `hexdump`
+  - [ ] `hostid`
+  - [ ] `hostname`
+  - [ ] `httppost`
+  - [ ] `hunt`
+  - [ ] `id`
+  - [ ] `installkernel`
+  - [ ] `ischroot`
+  - [ ] `join`
+  - [ ] `kill`
+  - [x] `kilo`
+  - [ ] `ld`
+  - [ ] `less`
+  - [ ] `lisp`
+  - [ ] `logger`
+  - [ ] `look`
+  - [x] `ls`
+  - [ ] `m4`
+  - [x] `make`
+  - [ ] `man`
+  - [ ] `minias`
+  - [ ] `minilisp`
+  - [ ] `mkdir`
+  - [ ] `mkfat`
+  - [x] `mount`
+  - [ ] `nl`
+  - [ ] `otp`
+  - [ ] `patch`
+  - [ ] `pbget`
+  - [ ] `pbput`
+  - [x] `pivot_root`
+  - [ ] `pmap`
+  - [ ] `poweroff`
+  - [ ] `ps`
+  - [x] `pwd`
+  - [ ] `rand`
+  - [ ] `readelf`
+  - [ ] `reboot`
+  - [ ] `reset`
+  - [x] `rm`
+  - [x] `rmdir`
+  - [ ] `sdiff`
+  - [ ] `sed`
+  - [ ] `seq`
+  - [ ] `setcap`
+  - [ ] `sha256`
+  - [ ] `sha3`
+  - [x] `sh`
+  - [ ] `shuf`
+  - [ ] `shutdown`
+  - [ ] `sleep`
+  - [ ] `sort`
+  - [ ] `split`
+  - [ ] `stat`
+  - [ ] `stty`
+  - [ ] `sum`
+  - [ ] `tabs`
+  - [ ] `tac`
+  - [ ] `tail`
+  - [ ] `tar`
+  - [ ] `tee`
+  - [ ] `test`
+  - [ ] `time`
+  - [ ] `timeout`
+  - [ ] `tinylisp`
+  - [ ] `touch`
+  - [ ] `tr`
+  - [ ] `tree`
+  - [x] `true`
+  - [ ] `truncate`
+  - [ ] `tset`
+  - [ ] `tty`
+  - [x] `uname`
+  - [ ] `unexpand`
+  - [ ] `uniq`
+  - [ ] `uptime`
+  - [ ] `users`
+  - [ ] `uuidgen`
+  - [ ] `wc`
+  - [ ] `whereis`
+  - [ ] `which`
+  - [x] `whoami`
+  - [ ] `xargs`
