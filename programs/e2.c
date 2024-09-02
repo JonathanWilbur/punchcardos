@@ -1,11 +1,13 @@
 /* This is a tool that formats a file as a minimally viable ext2 partition. */
 #include <linux/types.h>
+#ifndef NOLIBC
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#endif
 
 #define ROOT_UID        0
 #define ROOT_GID        0
@@ -36,11 +38,11 @@
 #endif /* __nonstring */
 
 #define EXT2_LABEL_LEN				16
-#define BLOCK_SIZE                  1024
+#define EXT2_BLOCK_SIZE             1024
 #define SUPERBLOCK_OFFSET           1024
 #define EXT2_SUPER_MAGIC            0xEF53
-#define INODE_TABLE_OFFSET          (2 * BLOCK_SIZE)
-#define S_FIRST_DATA_BLOCK          (BLOCK_SIZE == 1024 ? 1 : 0)
+#define INODE_TABLE_OFFSET          (2 * EXT2_BLOCK_SIZE)
+#define S_FIRST_DATA_BLOCK          (EXT2_BLOCK_SIZE == 1024 ? 1 : 0)
 
 /*
  * Constants relative to the data blocks
@@ -309,18 +311,18 @@ struct ext2_group_desc
 // TODO: I am not sure this selection of values makes sense.
 #define INODES_PER_GROUP            1024
 // Since each bitmap is limited to a single block, this means that the maximum size of a block group is 8 times the size of a block.
-#define BLOCKS_PER_GROUP            BLOCK_SIZE * 8
-#define FRAGS_PER_GROUP             BLOCK_SIZE * 8
+#define BLOCKS_PER_GROUP            EXT2_BLOCK_SIZE * 8
+#define FRAGS_PER_GROUP             EXT2_BLOCK_SIZE * 8
 
 // WARNING: Make sure that INODES_PER_GROUP and BLOCKS_PER_GROUP are evenly divisible by 8!
 #define BYTES_FOR_BLOCK_BITMAP      (BLOCKS_PER_GROUP >> 3)
-#define BLOCKS_FOR_BLOCK_BITMAP     (BYTES_FOR_BLOCK_BITMAP / BLOCK_SIZE)
+#define BLOCKS_FOR_BLOCK_BITMAP     (BYTES_FOR_BLOCK_BITMAP / EXT2_BLOCK_SIZE)
 
 #define BYTES_FOR_INODE_BITMAP      (INODES_PER_GROUP >> 3)
-#define BLOCKS_FOR_INODE_BITMAP     (BYTES_FOR_INODE_BITMAP / BLOCK_SIZE)
+#define BLOCKS_FOR_INODE_BITMAP     (BYTES_FOR_INODE_BITMAP / EXT2_BLOCK_SIZE)
 
 #define BYTES_FOR_INODE_TABLE       (INODES_PER_GROUP * INODE_SIZE)
-#define BLOCKS_FOR_INODE_TABLE      (BYTES_FOR_INODE_TABLE / BLOCK_SIZE)
+#define BLOCKS_FOR_INODE_TABLE      (BYTES_FOR_INODE_TABLE / EXT2_BLOCK_SIZE)
 
 // This is ONLY a fixed value if version < 1.
 #define INODE_SIZE  128
@@ -377,7 +379,7 @@ defined here).
 */
 
 int write_empty_block (int ofd) {
-    char buf[BLOCK_SIZE];
+    char buf[EXT2_BLOCK_SIZE];
     memset(&buf, 0, sizeof(buf));
     return write(ofd, &buf, sizeof(buf));
 }
@@ -424,7 +426,7 @@ int write_bitmap (int ofd, int leading_set_bits) {
         return 0;
     }
     bitmap_bytes_written++;
-    if (write_padding(ofd, BLOCK_SIZE - bitmap_bytes_written) < 0) {
+    if (write_padding(ofd, EXT2_BLOCK_SIZE - bitmap_bytes_written) < 0) {
         perror("write padding");
         return 0;
     }
@@ -530,7 +532,7 @@ int format_ext (int ofd) {
         perror("write block group descriptor");
         return EXIT_FAILURE;
     }
-    if (write_padding(ofd, BLOCK_SIZE - sizeof(gd)) < 0) {
+    if (write_padding(ofd, EXT2_BLOCK_SIZE - sizeof(gd)) < 0) {
         perror("write padding after block group descriptor table");
         return EXIT_FAILURE;
     }
@@ -568,7 +570,7 @@ int format_ext (int ofd) {
         perror("write block bitmap");
         return EXIT_FAILURE;
     }
-    if (write_padding(ofd, BLOCK_SIZE - 1) < 0) {
+    if (write_padding(ofd, EXT2_BLOCK_SIZE - 1) < 0) {
         perror("write padding");
         return EXIT_FAILURE;
     }
