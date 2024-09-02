@@ -308,7 +308,6 @@ struct ext2_group_desc
 	__u16	bg_checksum;		/* crc16(s_uuid+group_num+group_desc)*/
 };
 
-// TODO: I am not sure this selection of values makes sense.
 #define INODES_PER_GROUP            1024
 // Since each bitmap is limited to a single block, this means that the maximum size of a block group is 8 times the size of a block.
 #define BLOCKS_PER_GROUP            EXT2_BLOCK_SIZE * 8
@@ -328,55 +327,6 @@ struct ext2_group_desc
 #define INODE_SIZE  128
 
 #define INODES_COUNT        (GROUPS_COUNT * INODES_PER_GROUP)
-
-const char* root_names[14] = {
-    "bin",
-    "boot",
-    "etc",
-    "home",
-    "lib",
-    "opt",
-    "root",
-    "run",
-    "sbin",
-    "srv",
-    "tmp",
-    "usr",
-    "var",
-    NULL,
-};
-
-/*
-// TODO: Create all of these during formatting.
-
-Each directory will take up one inode. Those with no subordinates will take up
-no blocks; those with will take up 1 (because 1 is big enough to fit all those
-defined here).
-
-/usr/bin
-/usr/include
-/usr/sbin
-/usr/share
-/usr/local
-/usr/src
-/usr/lib
-
-/run/log
-/run/lock
-
-/var/lock -> /run/lock
-/var/run -> /run
-/var/backups
-/var/cache
-/var/lib
-/var/local
-/var/log
-/var/mail
-/var/opt
-/var/spool
-/var/tmp (set sticky bit)
-
-*/
 
 int write_empty_block (int ofd) {
     char buf[EXT2_BLOCK_SIZE];
@@ -398,15 +348,6 @@ int write_padding (int ofd, int size) {
         return -1;
     }
     return write(ofd, padbuf, size);
-}
-
-size_t size_of_dirent (size_t namelen) {
-    return (
-        4 // Size of inode
-        + 2 // Entry length
-        + 2 // Name length / type indicator
-        + namelen // I don't think this is null-terminated.
-    );
 }
 
 int write_bitmap (int ofd, int leading_set_bits) {
@@ -433,16 +374,7 @@ int write_bitmap (int ofd, int leading_set_bits) {
     return bitmap_bytes_written;
 }
 
-/* In this implementation, we just put all blocks in a single block group. This
-does not have to be efficient or good. It just minimally has to work.
-
-TODO: However, this implementation limits us to 8192 inodes. Is that acceptable?
-For now, I am going to accept this and just see if I can make this work.
-
-On second thought, I think it will not really be that hard to add more
-block groups. All you have to do is add group descriptors, and bitmaps and
-inode tables.
- */
+// TODO: Add more block groups.
 int format_ext (int ofd) {
     struct ext2_group_desc groups[GROUPS_COUNT];
     memset(&groups, 0, sizeof(groups));
@@ -594,11 +526,11 @@ int format_ext (int ofd) {
     return EXIT_SUCCESS;
 }
 
-// int add_file (int ifd, int ofd) {
-
-// }
-
 int main (int argc, char **argv) {
     int ofd = open(argv[1], O_CREAT | O_RDWR);
+    if (ofd < 0) {
+        perror("open file");
+        return EXIT_FAILURE;
+    }
     return format_ext(ofd);
 }
