@@ -469,7 +469,7 @@ I need to report this. I don't think it should do this.
   - [x] `sleep`
   - [ ] `dmesg`
   - [x] `stat`
-  - [ ] `touch`
+  - [x] `touch`
   - [ ] `which`
   - [ ] `hostname`
   - [ ] `strings` (https://github.com/michael105/minicore/blob/master/porting/minutils/src/strings.c)
@@ -606,7 +606,7 @@ I need to report this. I don't think it should do this.
   - [x] `sh`
   - [ ] `shuf`
   - [ ] `shutdown`
-  - [ ] `sleep`
+  - [x] `sleep`
   - [ ] `sort`
   - [ ] `split`
   - [x] `stat`
@@ -621,7 +621,7 @@ I need to report this. I don't think it should do this.
   - [ ] `time`
   - [ ] `timeout`
   - [ ] `tinylisp`
-  - [ ] `touch`
+  - [x] `touch`
   - [ ] `tr`
   - [ ] `tree`
   - [x] `true`
