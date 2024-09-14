@@ -459,7 +459,7 @@ I need to report this. I don't think it should do this.
   - [x] ~~`mtools`~~
   - [x] `m4`
   - [x] `dd`
-  - [ ] `truncate`
+  - [x] `truncate`
   - [ ] `chmod`*
   - [ ] `chown`*
   - [ ] `find`
@@ -625,7 +625,7 @@ I need to report this. I don't think it should do this.
   - [ ] `tr`
   - [ ] `tree`
   - [x] `true`
-  - [ ] `truncate`
+  - [x] `truncate`
   - [ ] `tset`
   - [ ] `tty`
   - [x] `uname`
