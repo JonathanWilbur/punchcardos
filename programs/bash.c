@@ -167,8 +167,6 @@ __asm__(
 ".size __restore_rt,.-__restore_rt\n"
 );
 
-extern void __restore_rt ();
-
 int sigaction(int sig, const struct sigaction *restrict sa, struct sigaction *restrict old)
 {
     struct k_sigaction ksa;
