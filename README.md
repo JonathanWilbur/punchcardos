@@ -437,14 +437,14 @@ I need to report this. I don't think it should do this.
 ## To Do
 
 - [ ] MVP
-  - [ ] `minias`
+  - [x] ~~`minias`~~
   - [ ] `elfread`
     - [ ] Print symbols
     - [ ] Print symbols in executable code
     - [ ] Print relocations
   - [ ] `ld`
   - [x] `minibash`
-  - [ ] `peg/leg`
+  - [x] ~~`peg/leg`~~
   - [x] `hexdump`
   - [ ] `hunt`
   - [ ] `peck`
@@ -468,7 +468,7 @@ I need to report this. I don't think it should do this.
   - [ ] `stty`
   - [ ] `sleep`
   - [ ] `dmesg`
-  - [ ] `stat` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/stat.c)
+  - [x] `stat`
   - [ ] `touch`
   - [ ] `which`
   - [ ] `hostname`
@@ -609,7 +609,7 @@ I need to report this. I don't think it should do this.
   - [ ] `sleep`
   - [ ] `sort`
   - [ ] `split`
-  - [ ] `stat`
+  - [x] `stat`
   - [ ] `stty`
   - [ ] `sum`
   - [ ] `tabs`
