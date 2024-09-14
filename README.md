@@ -473,7 +473,7 @@ I need to report this. I don't think it should do this.
   - [ ] `which`
   - [x] `hostname`
   - [ ] `strings` (https://github.com/michael105/minicore/blob/master/porting/minutils/src/strings.c)
-  - [ ] `tty` ()
+  - [x] `tty`
   - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
   - [x] `mv`
   - [ ] `cp`
@@ -627,7 +627,7 @@ I need to report this. I don't think it should do this.
   - [x] `true`
   - [x] `truncate`
   - [ ] `tset`
-  - [ ] `tty`
+  - [x] `tty`
   - [x] `uname`
   - [ ] `unexpand`
   - [ ] `uniq`
