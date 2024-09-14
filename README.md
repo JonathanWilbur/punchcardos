@@ -453,11 +453,33 @@ I need to report this. I don't think it should do this.
   - [x] `minised`
   - [x] ~~`miniawk`~~
     - This is too heavily dependent on regex and math. It will have to compile against `musl`.
-  - [ ] `cpio`
-  - [ ] A bootloader
-  - [ ] `syslinux`
-  - [ ] `mtools`
+  - [x] `cpio`
+  - [ ] A bootloader (https://github.com/owenson/tiny-linux-bootloader/tree/master)
+  - [x] ~~`syslinux`~~
+  - [x] ~~`mtools`~~
+  - [x] `m4`
+  - [x] `dd`
+  - [ ] `truncate`
+  - [ ] `chmod`*
+  - [ ] `chown`*
+  - [ ] `find`
+  - [ ] `grep`
+  - [ ] `httpget`
+  - [ ] `stty`
+  - [ ] `sleep`
+  - [ ] `dmesg`
+  - [ ] `stat` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/stat.c)
+  - [ ] `touch`
+  - [ ] `which`
+  - [ ] `hostname`
+  - [ ] `strings` (https://github.com/michael105/minicore/blob/master/porting/minutils/src/strings.c)
+  - [ ] `tty` ()
+  - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
+  - [x] `mv`
+  - [ ] `cp`
   - [ ] Some hashing program
+  - [ ] C runtime that drops capabilities, changes root, landlock?
+- [ ] Mount initramfs as read-only
 - [ ] Is it possible to make single-file `binutils` / `elfutils` commands?
 - [ ] Tools for blacklisting or removing modules?
 - [x] Syslinux configuration
@@ -469,6 +491,7 @@ I need to report this. I don't think it should do this.
 - [ ] Container building via [Earthly](https://github.com/earthly/earthly)
 - [ ] https://github.com/oriansj/torture_c/tree/main
 - [ ] https://github.com/jart/sectorlisp
+- [ ] https://github.com/realchonk/microcoreutils/tree/master
 - [ ] I still haven't found a suitable ELF / x86-64 disassembler.
 - [ ] Signed commits
 - [ ] Signed releases
@@ -505,6 +528,7 @@ I need to report this. I don't think it should do this.
   - [ ] `colrm`
   - [ ] `comm`
   - [x] `cowsay`
+  - [ ] `cp`
   - [ ] `cpio`
   - [ ] `cut`
   - [x] `date`
@@ -555,8 +579,8 @@ I need to report this. I don't think it should do this.
   - [ ] `minias`
   - [ ] `minilisp`
   - [ ] `mkdir`
-  - [ ] `mkfat`
   - [x] `mount`
+  - [x] `mv`
   - [ ] `nl`
   - [ ] `otp`
   - [ ] `patch`
