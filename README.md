@@ -471,7 +471,7 @@ I need to report this. I don't think it should do this.
   - [x] `stat`
   - [x] `touch`
   - [ ] `which`
-  - [ ] `hostname`
+  - [x] `hostname`
   - [ ] `strings` (https://github.com/michael105/minicore/blob/master/porting/minutils/src/strings.c)
   - [ ] `tty` ()
   - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
@@ -558,7 +558,7 @@ I need to report this. I don't think it should do this.
   - [x] `head`
   - [x] `hexdump`
   - [ ] `hostid`
-  - [ ] `hostname`
+  - [x] `hostname`
   - [ ] `httppost`
   - [ ] `hunt`
   - [ ] `id`
