@@ -466,7 +466,7 @@ I need to report this. I don't think it should do this.
   - [ ] `grep`
   - [ ] `httpget`
   - [ ] `stty`
-  - [ ] `sleep`
+  - [x] `sleep`
   - [ ] `dmesg`
   - [x] `stat`
   - [ ] `touch`

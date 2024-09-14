@@ -1,6 +1,8 @@
+#ifndef NOLIBC
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -13,7 +15,9 @@ int main(int argc, char *argv[])
     {
         return EXIT_FAILURE;
     }
+#ifndef NOLIBC
 	signal(SIGALRM, SIG_IGN);
+#endif
 	sleep(seconds);
 	return EXIT_SUCCESS;
 }
