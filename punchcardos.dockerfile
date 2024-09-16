@@ -15,7 +15,7 @@ LABEL description="PunchcardOS: A minimal Unix-like distro for bootstrapping a t
 # The only place where the Kernel uses it for building is here: kernel/time/timeconst.bc.
 # (It is used a lot for tests, I think.)
 # rsync is required to install headers, but not to build the Kernel itself.
-ENV KERNEL_REQS="make gcc flex bison libelf-dev bc binutils rsync"
+ENV KERNEL_REQS="make gcc libelf-dev bc binutils rsync"
 ENV KERNEL_OPT="libncurses-dev"
 ENV KERNEL_UNK="cpio clang dwarves jfsutils reiserfsprogs xfsprogs btrfs-progs libssl-dev"
 # Currently, all of the below are used, except maybe vim. IDK why I included it.
@@ -41,16 +41,9 @@ ADD /pgp/* /pgp
 RUN gpg --import /pgp/gregkh.gpg
 RUN gpg --import /pgp/torvalds.gpg
 
-# We are skipping Rust for now.
-# TODO: Add --profile minimal
-# RUN curl -sSf https://sh.rustup.rs | sh -s -- -y
-# RUN . "$HOME/.cargo/env"
-# RUN $HOME/.cargo/bin/cargo install bindgen-cli
-
-ENV LINUX_VERSION=6.9.6
-
-RUN curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.xz -o linux.tar.xz
-RUN curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.sign -o linux.tar.sign
+ENV LINUX_VERSION=6.10.10
+RUN curl -L https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.xz -o linux.tar.xz
+RUN curl -L https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.sign -o linux.tar.sign
 
 # The TAR archive is signed, not the compressed XZ file.
 RUN xz -cd linux.tar.xz | gpg --verify linux.tar.sign -
@@ -60,22 +53,34 @@ RUN tar -C /build/stage/src/linux --strip-components 1 -xvf linux.tar.xz
 
 WORKDIR /build/stage/src/linux
 RUN make mrproper
-ADD mods mods
-ENV LSMOD=/build/stage/src/linux/mods
-# IDK why, but it seems that you have to first have a config before
-# localyesconfig will work.
-# RUN make allnoconfig
-# RUN make localyesconfig
-RUN make ARCH=x86_64 x86_64_defconfig
-# RUN make allmodconfig
+# ADD mods mods
+# ENV LSMOD=/build/stage/src/linux/mods
+ADD files/linux/.config .config
+ADD files/linux/include/config include/config
+ADD files/linux/include/generated include/generated
+RUN touch include/config/auto.conf
+RUN touch include/config/auto.conf.cmd
+RUN touch include/generated/autoconf.h
 
-ADD ./scripts/configure_kernel.sh ./configure_kernel.sh
-RUN chmod +x configure_kernel.sh \
-    && ./configure_kernel.sh \
-    && rm configure_kernel.sh
+# By using pre-generated configs and related-files, we avoid any need to use
+# flex and bison entirely. (This is probably not true if you use certain
+# drivers. I can see that it is used in a few other places.) The code below will
+# remain commented out for future use, if its ever needed.
+#
+# Note that files/linux/include/config/auto.conf.cmd was manually modified to
+# remove the checks for changes to the exact version numbers of things.
+# 
+# TODO: Figure out which config to use.
+# make ARCH=x86_64 x86_64_defconfig or make allnoconfig && make localyesconfig?
+
+# TODO: Incorporate this into the hard-coded configuration.
+# ADD ./scripts/configure_kernel.sh ./configure_kernel.sh
+# RUN chmod +x configure_kernel.sh \
+#     && ./configure_kernel.sh \
+#     && rm configure_kernel.sh
 
 # This is a Reproducible Builds standard
-RUN SOURCE_DATE_EPOCH=1719086180 make -j 4
+RUN SOURCE_DATE_EPOCH=1719086180 make -j 2
 
 RUN mkdir /build/stage/linux-headers
 RUN make headers_install ARCH=x86 INSTALL_HDR_PATH=/build/initramfs/usr
