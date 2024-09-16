@@ -465,18 +465,21 @@ I need to report this. I don't think it should do this.
   - [ ] `find`
   - [ ] `grep`
   - [ ] `httpget`
-  - [ ] `stty`
+  - [x] `stty`
   - [x] `sleep`
   - [ ] `dmesg`
   - [x] `stat`
   - [x] `touch`
-  - [ ] `which`
+  - [ ] `which` (This should just be a built-in)
   - [x] `hostname`
   - [ ] `strings` (https://github.com/michael105/minicore/blob/master/porting/minutils/src/strings.c)
   - [x] `tty`
   - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
   - [x] `mv`
   - [ ] `cp`
+  - [ ] `flex`
+  - [ ] `bison`
+  - [ ] `perl`
   - [ ] Some hashing program
   - [ ] C runtime that drops capabilities, changes root, landlock?
 - [ ] Mount initramfs as read-only
@@ -506,6 +509,7 @@ I need to report this. I don't think it should do this.
 - [ ] Drop capabilities
 - [ ] `setcap` / `getcap` programs
 - [ ] Executable minification
+- [ ] Clone and use: https://git.kernel.org/pub/scm/docs/kernel/pgpkeys.git
 - [ ] Programs
   - [x] `arch`
   - [ ] `asn1parse`
@@ -610,7 +614,7 @@ I need to report this. I don't think it should do this.
   - [ ] `sort`
   - [ ] `split`
   - [x] `stat`
-  - [ ] `stty`
+  - [x] `stty`
   - [ ] `sum`
   - [ ] `tabs`
   - [ ] `tac`
