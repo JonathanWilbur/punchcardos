@@ -443,13 +443,14 @@ I need to report this. I don't think it should do this.
     - [ ] Print symbols in executable code
     - [ ] Print relocations
   - [ ] `ld`
+    - This might get a lot simpler if I can get VDSO to _not_ be built.
   - [x] `minibash`
   - [x] ~~`peg/leg`~~
   - [x] `hexdump`
   - [ ] `hunt`
   - [ ] `peck`
   - [ ] `pex` (Peck, but for Hex)
-  - [ ] `ar`
+  - [ ] `ar` (Should be easy, just copy `mkcpio` and change a few things.)
   - [x] `minised`
   - [x] ~~`miniawk`~~
     - This is too heavily dependent on regex and math. It will have to compile against `musl`.
@@ -460,26 +461,30 @@ I need to report this. I don't think it should do this.
   - [x] `m4`
   - [x] `dd`
   - [x] `truncate`
-  - [ ] `chmod`*
+  - [x] `chmod`
   - [ ] `chown`*
   - [ ] `find`
   - [ ] `grep`
   - [ ] `httpget`
+  - [ ] `env`
   - [x] `stty`
   - [x] `sleep`
-  - [ ] `dmesg`
+  - [x] `dmesg`
   - [x] `stat`
   - [x] `touch`
   - [ ] `which` (This should just be a built-in)
   - [x] `hostname`
-  - [ ] `strings` (https://github.com/michael105/minicore/blob/master/porting/minutils/src/strings.c)
+  - [x] `strings`
   - [x] `tty`
   - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
   - [x] `mv`
   - [ ] `cp`
-  - [ ] `flex`
-  - [ ] `bison`
-  - [ ] `perl`
+  - [x] ~~`flex`~~
+  - [x] ~~`bison`~~
+  - [ ] `perl` (Does not seem to be needed for a Linux build)
+  - [ ] `sort` (Used in Linux)
+  - [ ] `xargs` (Used in Linux)
+  - [ ] `nm` (Used in Linux)
   - [ ] Some hashing program
   - [ ] C runtime that drops capabilities, changes root, landlock?
 - [ ] Mount initramfs as read-only
@@ -522,7 +527,7 @@ I need to report this. I don't think it should do this.
   - [x] `cat`
   - [ ] `chgrp`
   - [ ] `chibicc`
-  - [ ] `chmod`
+  - [x] `chmod`
   - [ ] `chown`
   - [ ] `chroot`
   - [ ] `cksum`
