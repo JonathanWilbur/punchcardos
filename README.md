@@ -454,6 +454,7 @@ I need to report this. I don't think it should do this.
   - [x] `minised`
   - [x] ~~`miniawk`~~
     - This is too heavily dependent on regex and math. It will have to compile against `musl`.
+    - Proven to be required, even by an `allnoconfig` build of the Linux kernel.
   - [x] `cpio`
   - [ ] A bootloader (https://github.com/owenson/tiny-linux-bootloader/tree/master)
   - [x] ~~`syslinux`~~
@@ -482,9 +483,12 @@ I need to report this. I don't think it should do this.
   - [x] ~~`flex`~~
   - [x] ~~`bison`~~
   - [ ] `perl` (Does not seem to be needed for a Linux build)
-  - [ ] `sort` (Used in Linux)
+  - [x] `sort` (Used in Linux)
+  - [x] `uniq` (Used in Linux)
   - [ ] `xargs` (Used in Linux)
-  - [ ] `nm` (Used in Linux)
+  - [ ] `objcopy`? (Might not be needed)
+  - [ ] `nm` (Used in Linux, but might not be needed)
+  - [ ] `wc` might be needed for Linux
   - [ ] Some hashing program
   - [ ] C runtime that drops capabilities, changes root, landlock?
 - [ ] Mount initramfs as read-only
@@ -616,7 +620,7 @@ I need to report this. I don't think it should do this.
   - [ ] `shuf`
   - [ ] `shutdown`
   - [x] `sleep`
-  - [ ] `sort`
+  - [x] `sort`
   - [ ] `split`
   - [x] `stat`
   - [x] `stty`
@@ -639,7 +643,7 @@ I need to report this. I don't think it should do this.
   - [x] `tty`
   - [x] `uname`
   - [ ] `unexpand`
-  - [ ] `uniq`
+  - [x] `uniq`
   - [ ] `uptime`
   - [ ] `users`
   - [ ] `uuidgen`
