@@ -185,11 +185,12 @@ docker cp $CONTAINER_ID:/build/boot pcos.img
 At minimum, you must run this:
 
 ```bash
-qemu-system-x86_64 -drive file=pcos.img,format=raw,index=0
+qemu-system-x86_64 -drive file=pcos.img,format=raw,index=0 -m 2G
 ```
 
 It is recommended that you add `-serial stdio` at the end of that, but I am not
-your boss.
+your boss. **UPDATE: It seems like the graphical console doesn't work anymore.
+I suspect I removed something needed for the keyboard to work.**
 
 When it boots up, you should see a Syslinux prompt. This is because there is no
 configuration to tell Syslinux _what_ to boot and _how_ to boot it. At this
@@ -480,6 +481,7 @@ I need to report this. I don't think it should do this.
   - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
   - [x] `mv`
   - [ ] `cp`
+  - [ ] `printf` (Used to build linux, but not much)
   - [x] ~~`flex`~~
   - [x] ~~`bison`~~
   - [ ] `perl` (Does not seem to be needed for a Linux build)
@@ -519,6 +521,8 @@ I need to report this. I don't think it should do this.
 - [ ] `setcap` / `getcap` programs
 - [ ] Executable minification
 - [ ] Clone and use: https://git.kernel.org/pub/scm/docs/kernel/pgpkeys.git
+- [ ] Get QEMU graphical console working again
+- [ ] Delete the unused `arch/*` and `test` folders from Linux to minimize the amount of code
 - [ ] Programs
   - [x] `arch`
   - [ ] `asn1parse`
