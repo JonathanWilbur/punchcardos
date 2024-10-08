@@ -445,6 +445,7 @@ I need to report this. I don't think it should do this.
     - [ ] Print relocations
   - [ ] `ld`
     - This might get a lot simpler if I can get VDSO to _not_ be built.
+    - You might be able to use `neatld` (see `./programs/neatld.c`)
   - [x] `minibash`
   - [x] ~~`peg/leg`~~
   - [x] `hexdump`
@@ -480,7 +481,8 @@ I need to report this. I don't think it should do this.
   - [x] `tty`
   - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
   - [x] `mv`
-  - [ ] `cp`
+  - [x] `cp`
+  - [x] `rsync`
   - [ ] `printf` (Used to build linux, but not much)
   - [x] ~~`flex`~~
   - [x] ~~`bison`~~
@@ -614,6 +616,7 @@ I need to report this. I don't think it should do this.
   - [ ] `reset`
   - [x] `rm`
   - [x] `rmdir`
+  - [x] `rsync`
   - [ ] `sdiff`
   - [ ] `sed`
   - [ ] `seq`
