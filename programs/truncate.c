@@ -11,7 +11,7 @@
 #else
 
 int truncate(const char *path, off_t length) {
-    return my_syscall2(__NR_truncate, path, length);
+    return __sysret(my_syscall2(__NR_truncate, path, length));
 }
 
 #endif
