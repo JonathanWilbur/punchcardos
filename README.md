@@ -487,12 +487,24 @@ I need to report this. I don't think it should do this.
   - [x] ~~`flex`~~
   - [x] ~~`bison`~~
   - [ ] `perl` (Does not seem to be needed for a Linux build)
-  - [x] `sort` (Used in Linux)
-  - [x] `uniq` (Used in Linux)
-  - [ ] `xargs` (Used in Linux)
+  - [x] `sort`
+  - [x] `uniq`
+  - [ ] `xargs`
+  - [x] `tr`
   - [ ] `objcopy`? (Might not be needed)
-  - [ ] `nm` (Used in Linux, but might not be needed)
-  - [ ] `wc` might be needed for Linux
+    - `objcopy -S --remove-section __ex_table  arch/x86/entry/vdso/vdso64.so.dbg arch/x86/entry/vdso/vdso64.so`
+    - `objcopy  -O binary arch/x86/realmode/rm/realmode.elf arch/x86/realmode/rm/realmode.bin`
+    - `objcopy  -j .modinfo -O binary vmlinux.o modules.builtin.modinfo`
+    - `objcopy  -R .comment -S vmlinux arch/x86/boot/compressed/vmlinux.bin`
+    - `objcopy  -O binary -R .note -R .comment -S arch/x86/boot/compressed/vmlinux arch/x86/boot/vmlinux.bin`
+    - `objcopy  -O binary arch/x86/boot/setup.elf arch/x86/boot/setup.bin`
+    - Options
+      - O = output format
+      - R = remove from output
+      - S = Do not copy relocation and symbol information from the source file
+      - j = Only section
+  - [x] `nm` (Used in Linux, but might not be needed)
+  - [x] `wc` might be needed for Linux
   - [ ] Some hashing program
   - [ ] C runtime that drops capabilities, changes root, landlock?
 - [ ] Mount initramfs as read-only
@@ -601,6 +613,7 @@ I need to report this. I don't think it should do this.
   - [x] `mount`
   - [x] `mv`
   - [ ] `nl`
+  - [x] `nm`
   - [ ] `otp`
   - [ ] `patch`
   - [ ] `pbget`
@@ -654,7 +667,7 @@ I need to report this. I don't think it should do this.
   - [ ] `uptime`
   - [ ] `users`
   - [ ] `uuidgen`
-  - [ ] `wc`
+  - [x] `wc`
   - [ ] `whereis`
   - [ ] `which`
   - [x] `whoami`
