@@ -6,18 +6,17 @@ gcc -static -nostdlib -g -include PATH_TO_LINUX/tools/include/nolibc/nolibc.h -i
 
 
 */
-/*  */
 #include "elf.h"
 #ifndef NOLIBC
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
 
 #ifdef __GLIBC__
-#include <stdio.h>
 
 // WARNING: This is non-reentrant.
 char* itoa (long long in) {
@@ -432,43 +431,45 @@ static int print_shdr64 (Elf64_Shdr header) {
 // TODO: Validate e_ehsize against actual ELF header.
 static int main64 (int fd, char* path) {
     Elf64_Ehdr header;
-    Elf32_Half e_phnum;
-    Elf32_Half e_shnum;
+    Elf64_Half e_phnum;
+    Elf64_Half e_shnum;
     Elf64_Phdr phdr;
     Elf64_Shdr shdr;
     char* section_bytes;
 
-    if (read(fd, (char *)&header, sizeof(Elf64_Ehdr)) != sizeof(Elf64_Ehdr)) {
+read_elf_header:
+    if (read(fd, (char *)&header, sizeof(Elf64_Ehdr)) != sizeof(Elf64_Ehdr))
         return EXIT_FAILURE;
-    }
-    if (header.e_ehsize != 64) {
+    if (header.e_ehsize != 64)
         return EXIT_FAILURE;
-    }
-    if (print_ehdr64(header) != EXIT_SUCCESS) {
+    if (print_ehdr64(header) != EXIT_SUCCESS)
         return EXIT_FAILURE;
-    }
 
     // Very unusual file layout where the program headers or section headers
     // overlap with the ELF header.
-    if ((header.e_phoff < 0x40) || (header.e_shoff < 0x40)) {
+    if (
+        (header.e_phoff > 0 && header.e_phoff < 0x40)
+        || (header.e_shoff > 0 && header.e_shoff < 0x40)
+    ) {
         puts(WEIRD_OVERLAP);
         return EXIT_FAILURE;
     }
 
     // Program or section headers are too small to fill in our structs.
     if (
-        (header.e_phentsize < sizeof(Elf64_Phdr))
-        || (header.e_shentsize < sizeof(Elf64_Shdr))
+        (header.e_phentsize > 0 && header.e_phentsize < sizeof(Elf64_Phdr))
+        || (header.e_shentsize > 0 && header.e_shentsize < sizeof(Elf64_Shdr))
     ) {
         puts(WEIRD_HEADER_SIZE);
         return EXIT_FAILURE;
     }
 
     e_phnum = header.e_phnum;
-    if (lseek(fd, header.e_phoff, SEEK_SET) != header.e_phoff) {
+seek_to_program_headers:
+    if (lseek(fd, header.e_phoff, SEEK_SET) != header.e_phoff)
         return EXIT_FAILURE;
-    }
     while (e_phnum--) {
+read_program_header:
         if (read(fd, (char *)&phdr, sizeof(Elf64_Phdr)) != sizeof(Elf64_Phdr)) {
             return EXIT_FAILURE;
         }
@@ -484,22 +485,23 @@ static int main64 (int fd, char* path) {
         return EXIT_FAILURE;
     }
 
-    // Define the start of the strings section header.
+calculate_shstrs_header_offset:
+    ;
     Elf64_Off start_shstrs = header.e_shoff
         + ((Elf64_Off)header.e_shstrndx * (Elf64_Off)header.e_shentsize);
-    // Seek to the start of the strings section header.
-    if (lseek(fd2, start_shstrs, SEEK_SET) != start_shstrs) {
+seek_to_shstrs_header_offset:
+    if (lseek(fd2, start_shstrs, SEEK_SET) != start_shstrs)
         return EXIT_FAILURE;
-    }
-    // Read the section header.
-    if (read(fd2, (char *)&shdr, sizeof(Elf64_Shdr)) != sizeof(Elf64_Shdr)) {
+read_shstrs_header:
+    if (read(fd2, (char *)&shdr, sizeof(Elf64_Shdr)) != sizeof(Elf64_Shdr))
         return EXIT_FAILURE;
-    }
-    // TODO: Assert that the header is of type SHT_STRTAB?
-    if (lseek(fd2, shdr.sh_offset, SEEK_SET) != shdr.sh_offset) {
+check_if_its_actually_section_header_strtab:
+    if (shdr.sh_type != SHT_STRTAB)
         return EXIT_FAILURE;
-    }
-    // Allocate room for the section header strings.
+seek_to_shstrs_section_body:
+    if (lseek(fd2, shdr.sh_offset, SEEK_SET) != shdr.sh_offset)
+        return EXIT_FAILURE;
+allocate_room_for_section_header_strings:
     sh_strs = malloc(shdr.sh_size + 1);
     if (sh_strs == NULL) {
         errno = ENOMEM;
@@ -509,15 +511,15 @@ static int main64 (int fd, char* path) {
     /* Set the last byte of the section header strings to NULL, just in case it
     is malformed and has no terminator. */
     sh_strs[shdr.sh_size] = 0;
-    if (read(fd2, sh_strs, shdr.sh_size) != shdr.sh_size) {
+
+read_section_header_strings:
+    if (read(fd2, sh_strs, shdr.sh_size) != shdr.sh_size)
         return EXIT_FAILURE;
-    }
+seek_back_to_section_headers_start:
+    if (lseek(fd, header.e_shoff, SEEK_SET) != header.e_shoff)
+        return EXIT_FAILURE;
 
     e_shnum = header.e_shnum;
-    if (lseek(fd, header.e_shoff, SEEK_SET) != header.e_shoff) {
-        return EXIT_FAILURE;
-    }
-
     while (e_shnum--) {
         if (read(fd, (char *)&shdr, sizeof(Elf64_Shdr)) != sizeof(Elf64_Shdr)) {
             return EXIT_FAILURE;

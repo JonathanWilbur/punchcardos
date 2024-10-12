@@ -126,8 +126,8 @@ read_strtab_into_memory:
         int b = 0;
         offset_to_hex(&b, buf, sym.st_value);
         char *sym_name = &strings[sym.st_name];
-        int sym_type = ELF32_ST_TYPE(sym.st_info);
-        int sym_binding = ELF32_ST_BIND(sym.st_info);
+        int sym_type = ELF64_ST_TYPE(sym.st_info);
+        int sym_binding = ELF64_ST_BIND(sym.st_info);
         int is_global = (sym_binding == STB_GLOBAL);
         if (sym_binding == STB_WEAK)
             sym_char = is_global ? 'W' : 'w';
@@ -178,8 +178,7 @@ next_symbol:
 
 static int main64 (int fd, char* path) {
     Elf64_Ehdr header;
-    Elf32_Half e_phnum;
-    Elf32_Half e_shnum;
+    Elf64_Half e_shnum;
     Elf64_Phdr phdr;
     Elf64_Shdr shdr;
 
@@ -191,15 +190,18 @@ read_elf_header:
 
     // Very unusual file layout where the program headers or section headers
     // overlap with the ELF header.
-    if ((header.e_phoff < 0x40) || (header.e_shoff < 0x40)) {
+    if (
+        (header.e_phoff > 0 && header.e_phoff < 0x40)
+        || (header.e_shoff > 0 && header.e_shoff < 0x40)
+    ) {
         puts(WEIRD_OVERLAP);
         return EXIT_FAILURE;
     }
 
     // Program or section headers are too small to fill in our structs.
     if (
-        (header.e_phentsize < sizeof(Elf64_Phdr))
-        || (header.e_shentsize < sizeof(Elf64_Shdr))
+        (header.e_phentsize > 0 && header.e_phentsize < sizeof(Elf64_Phdr))
+        || (header.e_shentsize > 0 && header.e_shentsize < sizeof(Elf64_Shdr))
     ) {
         puts(WEIRD_HEADER_SIZE);
         return EXIT_FAILURE;
