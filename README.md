@@ -438,7 +438,6 @@ I need to report this. I don't think it should do this.
 ## To Do
 
 - [ ] MVP
-  - [x] ~~`minias`~~
   - [ ] `elfread`
     - [ ] Print symbols
     - [ ] Print symbols in executable code
@@ -447,7 +446,6 @@ I need to report this. I don't think it should do this.
     - This might get a lot simpler if I can get VDSO to _not_ be built.
     - You might be able to use `neatld` (see `./programs/neatld.c`)
   - [x] `minibash`
-  - [x] ~~`peg/leg`~~
   - [x] `hexdump`
   - [ ] `hunt`
   - [ ] `peck`
@@ -459,8 +457,6 @@ I need to report this. I don't think it should do this.
     - Proven to be required, even by an `allnoconfig` build of the Linux kernel.
   - [x] `cpio`
   - [ ] A bootloader (https://github.com/owenson/tiny-linux-bootloader/tree/master)
-  - [x] ~~`syslinux`~~
-  - [x] ~~`mtools`~~
   - [x] `m4`
   - [x] `dd`
   - [x] `truncate`
@@ -484,12 +480,10 @@ I need to report this. I don't think it should do this.
   - [x] `cp`
   - [x] `rsync`
   - [ ] `printf` (Used to build linux, but not much)
-  - [x] ~~`flex`~~
-  - [x] ~~`bison`~~
-  - [ ] `perl` (Does not seem to be needed for a Linux build)
+  - [x] ~~`perl`~~ (Does not seem to be needed for a Linux build)
   - [x] `sort`
   - [x] `uniq`
-  - [ ] `xargs`
+  - [x] `xargs`
   - [x] `tr`
   - [x] `objcopy`
   - [x] `nm` (Used in Linux, but might not be needed)
@@ -660,4 +654,4 @@ I need to report this. I don't think it should do this.
   - [ ] `whereis`
   - [ ] `which`
   - [x] `whoami`
-  - [ ] `xargs`
+  - [x] `xargs`
