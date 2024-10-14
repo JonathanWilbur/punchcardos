@@ -25,3 +25,17 @@ scripts/mod/modpost
 set
 sh
 tr
+
+# Found in scripts above
+grep (grep -q "^$1=y" include/config/auto.conf)
+info
+printf
+ls (with -dn flag)
+cmp
+rm (with -rf)
+find . -name '*.usyms'
+xargs rm -f
+
+# Found but not needed
+git
+sed
