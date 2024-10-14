@@ -1,0 +1,103 @@
+# Packages to Produce
+
+Obviously, there are many more not listed here.
+
+- [ ] Git
+- [ ] GNU Make
+- [ ] OpenSSL
+- [ ] strace
+- [ ] Dash (Debian Almquist Shell)
+- [ ] Go Compiler
+- [ ] https://github.com/benhoyt/goawk
+- [ ] Micro https://github.com/zyedidia/micro
+- [ ] elfutils
+- [ ] Python Interpreter
+  - Written in C; Uses the GNU toolchain, but should be simple enough to compile
+  - Has a lot of optional features, so this will be an incremental 
+- [ ] Perl Interpreter
+- [ ] GPG / PGP
+- [ ] Ghidra
+- [ ] Redare2
+- [ ] Wireshark
+- [ ] Unicorn https://github.com/unicorn-engine/unicorn
+- [ ] nasm
+- [ ] musl
+- [ ] Flex
+- [ ] Bison
+- [ ] Zlib
+- [ ] xz-utils
+- [ ] bzip2
+- [ ] pahole
+- [ ] syslinux
+- [ ] dosfstools
+- [ ] mpfr
+- [ ] gmp
+- [ ] mpc
+- [ ] mes
+- [ ] stage0-posix
+- [ ] M2-planet
+- [ ] mescc-tools
+- [ ] kmod
+- [ ] rsync
+- [ ] straplibc
+- [ ] libsyscall
+- [ ] Clang / LLVM (to get a C++ compiler)
+- [ ] Tendra C++ Compiler (https://github.com/tendra/tendra)
+  - This might be a viable C++ Bootstrapping
+- [ ] mrustc
+- [ ] rustc
+- [ ] ziglang (https://github.com/ziglang/zig-bootstrap)
+- [ ] m4
+- [ ] util-linux
+- [ ] Tilck
+- [ ] FreeBSD
+- [ ] OpenBSD
+- [ ] nanopb (https://github.com/nanopb/nanopb)
+- [ ] libsqlite3
+- [ ] OpenLDAP
+- [ ] Telegram Clients
+- [ ] Matrix Clients
+- [ ] kirc (https://github.com/mcpcpc/kirc)
+- [ ] libcurses
+- [ ] Wireguard
+- [ ] OpenVPN
+- [ ] Printing Stuff?
+- [ ] Less
+- [ ] libxml
+- [ ] libtasn1
+- [ ] quickjs
+- [ ] libidn
+- [ ] libiconv
+- [ ] Some email tools
+- [ ] libreadline
+- [ ] GNU Radio
+- [ ] Podman (https://github.com/containers/podman)
+- [ ] Buildah (https://github.com/containers/buildah)
+- [ ] crun (https://github.com/containers/crun)
+- [ ] Skopeo (https://github.com/containers/skopeo)
+- [ ] EFI stuff?
+- [ ] Dropbear SSH (https://github.com/mkj/dropbear)
+- [ ] TinySSH (https://github.com/janmojzis/tinyssh)
+- [ ] OpenWRT
+- [ ] e2fsprogs
+- [ ] Bun
+- [ ] NodeJS
+- [ ] OpenJDK
+- [ ] Bazel (https://bazel.build/install/compile-source#bootstrap-unix-prereq)
+- [ ] GrapheneOS (https://grapheneos.org/build#downloading-source-code)
+- [ ] https://github.com/FreeRTOS/FreeRTOS
+- [ ] libjson (https://github.com/vincenthz/libjson)
+- [ ] sudo
+- [ ] ip CLI
+- [ ] FreeRTOS (https://github.com/FreeRTOS/FreeRTOS)
+- [ ] man
+- [ ] iw (https://wireless.wiki.kernel.org/en/users/documentation/iw)
+- [ ] fwupd (https://github.com/fwupd/fwupd)
+- [ ] SystemD
+- [ ] Graphics?
+- [ ] Web Browsers
+  - [ ] https://github.com/dillo-browser/dillo?tab=readme-ov-file
+  - [ ] https://www.netsurf-browser.org/
+  - [ ] Elinks (https://github.com/rkd77/elinks)
+  - [ ] Browsh https://github.com/browsh-org/browsh?tab=readme-ov-file
+- [ ] Direwolf
