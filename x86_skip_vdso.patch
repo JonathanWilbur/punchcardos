@@ -1,0 +1,134 @@
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 1d7122a18..7f5bc5c89 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2284,6 +2284,19 @@ config HOTPLUG_CPU
+ 	def_bool y
+ 	depends on SMP
+ 
++config X86_SKIP_VDSO
++	bool "Do not build vDSO for x86"
++	default n
++	depends on 64BIT
++	depends on !X86_32
++	depends on !IA32_EMULATION
++	help
++	  vDSO is the only ELF object in an allnoconfig build for x86-64 that
++	  requires a linker capable of dynamic linking. If you are building
++	  Linux on a system that does not have a dynamic linker, set this to yes
++	  so Linux can be built with your tooling. This can be useful for
++	  bootstrapping Linux from a small set of simpler tools.
++
+ config COMPAT_VDSO
+ 	def_bool n
+ 	prompt "Disable the 32-bit vDSO (needed for glibc 2.3.3)"
+diff --git a/arch/x86/entry/Makefile b/arch/x86/entry/Makefile
+index ce1cc1622..1fb1dfc6b 100644
+--- a/arch/x86/entry/Makefile
++++ b/arch/x86/entry/Makefile
+@@ -14,7 +14,9 @@ CFLAGS_common.o			+= -fno-stack-protector
+ obj-y				:= entry.o entry_$(BITS).o syscall_$(BITS).o
+ obj-y				+= common.o
+ 
++ifneq ($(CONFIG_X86_SKIP_VDSO),y)
+ obj-y				+= vdso/
++endif
+ obj-y				+= vsyscall/
+ 
+ obj-$(CONFIG_PREEMPTION)	+= thunk.o
+diff --git a/arch/x86/entry/common.c b/arch/x86/entry/common.c
+index 51cc9c7cb..d617bee69 100644
+--- a/arch/x86/entry/common.c
++++ b/arch/x86/entry/common.c
+@@ -37,6 +37,33 @@
+ #include <asm/syscall.h>
+ #include <asm/irq_stack.h>
+ 
++/* Symbols in this enclosure are defined because we do not recurse into the
++vdso/ subdirectory at build-time. */
++#if IS_ENABLED(CONFIG_X86_SKIP_VDSO)
++unsigned int vclocks_used __read_mostly;
++
++#if defined(CONFIG_X86_64)
++unsigned int __read_mostly vdso64_enabled = 1;
++#endif
++
++bool fixup_vdso_exception(struct pt_regs *regs, int trapnr,
++			  unsigned long error_code, unsigned long fault_addr)
++{
++	/* REVIEW: I am not 100% sure this should return false. */
++	return false;
++}
++
++bool arch_syscall_is_vdso_sigreturn(struct pt_regs *regs)
++{
++	return false;
++}
++
++int arch_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
++{
++	return 0;
++}
++#endif
++
+ #ifdef CONFIG_X86_64
+ 
+ static __always_inline bool do_syscall_x64(struct pt_regs *regs, int nr)
+diff --git a/arch/x86/entry/entry_fred.c b/arch/x86/entry/entry_fred.c
+index f004a4dc7..88a2c6042 100644
+--- a/arch/x86/entry/entry_fred.c
++++ b/arch/x86/entry/entry_fred.c
+@@ -87,7 +87,11 @@ static __always_inline void fred_other(struct pt_regs *regs)
+ 		   likely(regs->fred_ss.vector == FRED_SYSENTER && !regs->fred_ss.lm)) {
+ 		regs->orig_ax = regs->ax;
+ 		regs->ax = -ENOSYS;
++/* if ia32_enabled() returns true, this condition will be true as well. This is
++just to allow us to skip compiling the vDSO without linker errors. */
++#if IS_ENABLED(CONFIG_X86_32)
+ 		do_fast_syscall_32(regs);
++#endif
+ 		return;
+ 	} else {
+ 		exc_invalid_op(regs);
+diff --git a/arch/x86/kernel/signal.c b/arch/x86/kernel/signal.c
+index 31b6f5ddd..842676bd1 100644
+--- a/arch/x86/kernel/signal.c
++++ b/arch/x86/kernel/signal.c
+@@ -213,11 +213,18 @@ setup_rt_frame(struct ksignal *ksig, struct pt_regs *regs)
+ 
+ 	/* Set up the stack frame */
+ 	if (is_ia32_frame(ksig)) {
++	/* is_ia32_frame() returns true only if CONFIG_X86_32 or
++	CONFIG_IA32_EMULATION are enabled. We just include this conditional
++	compilation to allow us to skip building the vDSO entirely if we don't
++	need it. */
++#if IS_ENABLED(CONFIG_X86_32) || IS_ENABLED(CONFIG_IA32_EMULATION)
+ 		if (ksig->ka.sa.sa_flags & SA_SIGINFO)
+ 			return ia32_setup_rt_frame(ksig, regs);
+ 		else
+-			return ia32_setup_frame(ksig, regs);
+-	} else if (is_x32_frame(ksig)) {
++			return ia32_setup_frame(ksig, regs); // Only place this is used.
++#endif
++	}
++	if (is_x32_frame(ksig)) {
+ 		return x32_setup_rt_frame(ksig, regs);
+ 	} else {
+ 		return x64_setup_rt_frame(ksig, regs);
+diff --git a/arch/x86/um/Makefile b/arch/x86/um/Makefile
+index 8bc72a51b..60855178c 100644
+--- a/arch/x86/um/Makefile
++++ b/arch/x86/um/Makefile
+@@ -27,7 +27,11 @@ subarch-y += ../kernel/sys_ia32.o
+ 
+ else
+ 
+-obj-y += syscalls_64.o vdso/
++obj-y += syscalls_64.o
++
++ifneq ($(CONFIG_X86_SKIP_VDSO),y)
++obj-y += vdso/
++endif
+ 
+ subarch-y = ../lib/csum-partial_64.o ../lib/memcpy_64.o \
+ 	../lib/memmove_64.o ../lib/memset_64.o

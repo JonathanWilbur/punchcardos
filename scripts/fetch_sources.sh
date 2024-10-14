@@ -24,7 +24,7 @@ gpg --import /pgp/gnupg.gpg
 gpg --import /pgp/junio-hamano.gpg      # Git SCM
 gpg --import /pgp/astikonas.asc         # Some bootstrapping things
 gpg --import /pgp/wayne-davison.gpg     # Rsync
-gpg --import /pgp/westes.gpg            # Flex
+gpg --import /pgp/westes.asc            # Flex
 
 # Used for QEMU.
 # Obtained from: https://keys.openpgp.org/vks/v1/by-fingerprint/CEACC9E15534EBABB82D3FA03353C9CEF108B584
@@ -186,7 +186,7 @@ curl -vL https://www.cpan.org/src/5.0/perl-5.40.0.tar.gz -o perl.tar.gz
 # TODO: Verify hash
 
 # PEG/LEG: Needed to build minias
-curl -vL https://www.piumarta.com/software/peg/peg-0.1.19.tar.gz -o peg.tar.gz
+# curl -vL https://www.piumarta.com/software/peg/peg-0.1.19.tar.gz -o peg.tar.gz
 # TODO: Verify hash
 
 # TODO: I don't know where the key is
@@ -288,6 +288,10 @@ git clone https://github.com/JonathanWilbur/libsyscall.git
 cd /build/initramfs/src/libsyscall
 # TODO: Check out specific hash and verify it
 cd /build/initramfs/src
+
+# TODO: Documented here: https://go.dev/doc/install/source
+# TODO: https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz
+# TODO: https://go.dev/src/bootstrap.bash
 
 # ~~util-linux~~ I am going to consider ./programs/mount "good enough."
 #

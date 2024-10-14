@@ -15,7 +15,7 @@ LABEL description="PunchcardOS: A minimal Unix-like distro for bootstrapping a t
 # The only place where the Kernel uses it for building is here: kernel/time/timeconst.bc.
 # (It is used a lot for tests, I think.)
 # rsync is required to install headers, but not to build the Kernel itself.
-ENV KERNEL_REQS="make gcc libelf-dev bc binutils rsync"
+ENV KERNEL_REQS="make gcc libelf-dev bc binutils rsync flex bison"
 ENV KERNEL_OPT="libncurses-dev"
 ENV KERNEL_UNK="cpio clang dwarves jfsutils reiserfsprogs xfsprogs btrfs-progs libssl-dev"
 # Currently, all of the below are used, except maybe vim. IDK why I included it.
@@ -72,6 +72,8 @@ RUN touch include/generated/autoconf.h
 # 
 # TODO: Figure out which config to use.
 # make ARCH=x86_64 x86_64_defconfig or make allnoconfig && make localyesconfig?
+RUN make ARCH=x86_64 allnoconfig
+# RUN make ARCH=x86_64 x86_64_defconfig
 
 # TODO: Incorporate this into the hard-coded configuration.
 # ADD ./scripts/configure_kernel.sh ./configure_kernel.sh
@@ -79,8 +81,23 @@ RUN touch include/generated/autoconf.h
 #     && ./configure_kernel.sh \
 #     && rm configure_kernel.sh
 
-# This is a Reproducible Builds standard
-RUN SOURCE_DATE_EPOCH=1719086180 make -j 2
+# TODO: Write a fake ld that logs calls to ld, then see what Linux needs to build.
+# RUN mkdir /build/stage/fake
+# ADD ./programs/fake.c /build/stage/fake/fake.c
+# RUN gcc -g /build/stage/fake/fake.c -o /usr/bin/fake
+# RUN mv /usr/bin/awk /usr/bin/real-awk
+# RUN cp /usr/bin/fake /usr/bin/awk
+
+ADD ./x86_skip_vdso.patch .
+RUN git apply --ignore-space-change --ignore-whitespace x86_skip_vdso.patch
+
+# It seems that you have to explicitly set ARCH=x86_64, otherwise, you'll get
+# an i386 build.
+# SOURCE_DATE_EPOCH is a Reproducible Builds standard
+# RUN SOURCE_DATE_EPOCH=1719086180 make ARCH=x86_64 -j4 \
+#     && cat /tmp/fake.log && false
+
+RUN SOURCE_DATE_EPOCH=1719086180 make ARCH=x86_64 V=1 -j4 | tee build_output.txt
 
 RUN mkdir /build/stage/linux-headers
 RUN make headers_install ARCH=x86 INSTALL_HDR_PATH=/build/initramfs/usr
