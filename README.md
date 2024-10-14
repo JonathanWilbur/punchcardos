@@ -479,7 +479,7 @@ I need to report this. I don't think it should do this.
   - [x] `mv`
   - [x] `cp`
   - [x] `rsync`
-  - [ ] `printf` (Used to build linux, but not much)
+  - [x] `printf` (Used to build linux, but not much)
   - [x] ~~`perl`~~ (Does not seem to be needed for a Linux build)
   - [x] `sort`
   - [x] `uniq`
