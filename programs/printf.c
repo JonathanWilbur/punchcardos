@@ -67,7 +67,6 @@ int main (int argc, char **argv) {
     fmtp = fmt;
 
     for (int i = 2; i < argc; i++) {
-        // printf("#%d\n", i);
         rc = printf_arg(fmtp, argv[i]);
         if (rc < 0)
             return EXIT_FAILURE;
@@ -87,6 +86,6 @@ int main (int argc, char **argv) {
     // Print the rest of the format string, if any.
     rc = printf_arg(fmtp, NULL);
     if (rc < 0)
-        return -rc;
+        return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }
