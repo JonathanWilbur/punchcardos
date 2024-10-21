@@ -145,6 +145,10 @@ parse_long_args:
         else if (!strcmp(arg, "--verbose")) {
             flags |= FLAG_VERBOSE;
         }
+        else {
+            printf("Option not understood: %s\n", arg);
+            return EXIT_FAILURE;
+        }
     }
 
 parse_target_and_link_name:
