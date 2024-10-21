@@ -471,7 +471,6 @@ I need to report this. I don't think it should do this.
   - [x] `dmesg`
   - [x] `stat`
   - [x] `touch`
-  - [ ] `which` (This should just be a built-in)
   - [x] `hostname`
   - [x] `strings`
   - [x] `tty`
@@ -489,6 +488,7 @@ I need to report this. I don't think it should do this.
   - [x] `nm` (Used in Linux, but might not be needed)
   - [x] `wc` might be needed for Linux
   - [x] `ln`
+  - [x] `cmp`
   - [ ] Some hashing program
   - [ ] C runtime that drops capabilities, changes root, landlock?
 - [ ] Mount initramfs as read-only
@@ -538,7 +538,7 @@ I need to report this. I don't think it should do this.
   - [ ] `chroot`
   - [ ] `cksum`
   - [x] `clear`
-  - [ ] `cmp`
+  - [x] `cmp`
   - [ ] `col`
   - [ ] `colrm`
   - [ ] `comm`
