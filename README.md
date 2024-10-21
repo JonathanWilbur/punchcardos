@@ -450,7 +450,7 @@ I need to report this. I don't think it should do this.
   - [ ] `hunt`
   - [ ] `peck`
   - [ ] `pex` (Peck, but for Hex)
-  - [ ] `ar` (Should be easy, just copy `mkcpio` and change a few things.)
+  - [x] `ar` (Should be easy, just copy `mkcpio` and change a few things.)
   - [x] `minised`
   - [x] ~~`miniawk`~~
     - This is too heavily dependent on regex and math. It will have to compile against `musl`.
@@ -461,7 +461,7 @@ I need to report this. I don't think it should do this.
   - [x] `dd`
   - [x] `truncate`
   - [x] `chmod`
-  - [ ] `chown`*
+  - [x] `chown`
   - [ ] `find`
   - [ ] `grep`
   - [ ] `httpget`
@@ -488,6 +488,7 @@ I need to report this. I don't think it should do this.
   - [x] `objcopy`
   - [x] `nm` (Used in Linux, but might not be needed)
   - [x] `wc` might be needed for Linux
+  - [x] `ln`
   - [ ] Some hashing program
   - [ ] C runtime that drops capabilities, changes root, landlock?
 - [ ] Mount initramfs as read-only
@@ -523,7 +524,7 @@ I need to report this. I don't think it should do this.
 - [ ] Programs
   - [x] `arch`
   - [ ] `asn1parse`
-  - [ ] `awk`
+  - [x] ~~`awk`~~
   - [x] `basename`
   - [x] `bc4linux`
   - [ ] `bc`
@@ -533,7 +534,7 @@ I need to report this. I don't think it should do this.
   - [ ] `chgrp`
   - [ ] `chibicc`
   - [x] `chmod`
-  - [ ] `chown`
+  - [x] `chown`
   - [ ] `chroot`
   - [ ] `cksum`
   - [x] `clear`
@@ -542,11 +543,11 @@ I need to report this. I don't think it should do this.
   - [ ] `colrm`
   - [ ] `comm`
   - [x] `cowsay`
-  - [ ] `cp`
-  - [ ] `cpio`
+  - [x] `cp`
+  - [x] `cpio`
   - [ ] `cut`
   - [x] `date`
-  - [ ] `dd`
+  - [x] `dd`
   - [ ] `diff3`
   - [ ] `diff`
   - [x] `dirname`
@@ -586,6 +587,7 @@ I need to report this. I don't think it should do this.
   - [ ] `lisp`
   - [ ] `logger`
   - [ ] `look`
+  - [x] `ln`
   - [x] `ls`
   - [ ] `m4`
   - [x] `make`
@@ -638,7 +640,7 @@ I need to report this. I don't think it should do this.
   - [ ] `timeout`
   - [ ] `tinylisp`
   - [x] `touch`
-  - [ ] `tr`
+  - [x] `tr`
   - [ ] `tree`
   - [x] `true`
   - [x] `truncate`
