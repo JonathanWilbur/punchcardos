@@ -86,7 +86,9 @@ char *resolve_executable_path (char *cmd, char *path_env) {
     char fullpath[PATH_MAX + 2];
     size_t path_env_len = strlen(path_env);
     int start = 0;
-
+    
+    if (path_env == NULL)
+        path_env = "";
     for (int i = 0; i < path_env_len; i++) {
         if (path_env[i] != ':')
             continue;
@@ -160,7 +162,10 @@ int xargs(int fd, int flags, int argc, char **argv) {
     char *item;
     int exit_code;
     /* This has to be strdup'd because strtok modifies its input. */
-    char* path_env = strdup(getenv("PATH"));
+    char* path_env = getenv("PATH");
+    path_env = (path_env == NULL)
+        ? strdup("")
+        : strdup(path_env);
 
     while ((item = readline()) != NULL) {
         if (strlen(item) == 0)
