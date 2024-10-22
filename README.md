@@ -465,7 +465,7 @@ I need to report this. I don't think it should do this.
   - [ ] `find`
   - [ ] `grep`
   - [ ] `httpget`
-  - [ ] `env`
+  - [x] `env`
   - [x] `stty`
   - [x] `sleep`
   - [x] `dmesg`
@@ -555,7 +555,7 @@ I need to report this. I don't think it should do this.
   - [x] `echo`
   - [ ] `edit`
   - [ ] `enc`
-  - [ ] `env`
+  - [x] `env`
   - [ ] `expand`
   - [ ] `expr`
   - [x] `false`
