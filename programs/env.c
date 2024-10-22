@@ -5,6 +5,23 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#else
+
+#define	X_OK	1
+
+char *strcat(char *dest, char *src) {
+    char *ret = dest;
+    while (*dest)
+        dest++;
+    while (*dest++ = *src++)
+        ;
+    return ret;
+}
+
+int access(const char *pathname, int mode) {
+    return __sysret(my_syscall2(__NR_access, pathname, mode));
+}
+
 #endif
 
 #define FLAG_IGNORE     (1 << 0)
