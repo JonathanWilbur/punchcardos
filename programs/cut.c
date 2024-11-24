@@ -16,8 +16,6 @@ This means "take the first 64 bytes" (from stdin).
 #include <string.h>
 #include <unistd.h>
 
-#define BUFSIZ      8192
-
 int atoi (const char* s) {
     int ret = 0;
     for (int i = 0; i < strlen(s); i++) {
@@ -29,6 +27,8 @@ int atoi (const char* s) {
     return ret;
 }
 
+#else
+#define BUFSIZ      8192
 #endif
 
 #define FLAG_ZERO_TERM      (1 << 0)
