@@ -13,21 +13,13 @@ struct utimbuf {
     time_t actime; /* Access time.  */
     time_t modtime; /* Modification time.  */
 };
- 
-static long __syscall_ret (unsigned long r) {
-	if (r > -4096UL) {
-		errno = -r;
-		return -1;
-	}
-	return r;
-}
 
 int access (const char *pathname, int mode) {
-    return __syscall_ret(my_syscall2(__NR_access, pathname, mode));
+    return __sysret(my_syscall2(__NR_access, pathname, mode));
 }
 
 int utime(const char *filename, const struct utimbuf *times) {
-    return __syscall_ret(my_syscall2(__NR_utime, filename, times));
+    return __sysret(my_syscall2(__NR_utime, filename, times));
 }
 
 #endif

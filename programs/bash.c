@@ -114,17 +114,8 @@ char *ttyname(int fd)
 	return buf;
 }
 
-static long __syscall_ret(unsigned long r)
-{
-	if (r > -4096UL) {
-		errno = -r;
-		return -1;
-	}
-	return r;
-}
-
 int access(const char *pathname, int mode) {
-    return __syscall_ret(my_syscall2(__NR_access, pathname, mode));
+    return __sysret(my_syscall2(__NR_access, pathname, mode));
 }
 
 static int unmask_done = 0;
@@ -185,7 +176,7 @@ int sigaction(int sig, const struct sigaction *restrict sa, struct sigaction *re
 #endif
     memcpy(&ksa.mask, &sa->sa_mask, _NSIG/8);
 	int r = my_syscall4(__NR_rt_sigaction, sig, &ksa, NULL, _NSIG / 8);
-	return __syscall_ret(r);
+	return __sysret(r);
 }
 
 #endif

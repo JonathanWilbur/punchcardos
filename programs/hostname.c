@@ -12,14 +12,6 @@ The license (MIT) for this program is commented out at the bottom of this file.
 #include <unistd.h>
 #else
 
-static long __syscall_ret (unsigned long r) {
-	if (r > -4096UL) {
-		errno = -r;
-		return -1;
-	}
-	return r;
-}
-
 // There is no gethostname system call. You use uname for this.
 int gethostname (char *name, size_t len) {
     struct utsname buf;
@@ -31,7 +23,7 @@ int gethostname (char *name, size_t len) {
 }
 
 int sethostname (const char *name, size_t len) {
-    return __syscall_ret(my_syscall2(__NR_sethostname, name, len));
+    return __sysret(my_syscall2(__NR_sethostname, name, len));
 }
 
 #endif
