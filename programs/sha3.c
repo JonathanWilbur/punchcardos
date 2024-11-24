@@ -4,6 +4,7 @@
 // Revised 07-Aug-15 to match with official release of FIPS PUB 202 "SHA3"
 // Revised 03-Sep-15 for portability + OpenSSL - style API
 
+#ifndef NOLIBC
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +12,9 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#else
+#define BUFSIZ 8192
+#endif
 
 #ifndef KECCAKF_ROUNDS
 #define KECCAKF_ROUNDS 24

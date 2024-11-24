@@ -12,10 +12,6 @@ License: UNLICENSE at the time of copying.
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __GLIBC__
-#include <sys/klog.h>
-#endif
-
 #else
 
 size_t strspn (const char *str, const char *accept) {

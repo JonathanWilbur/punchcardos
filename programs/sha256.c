@@ -17,6 +17,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 //  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
+#ifndef NOLIBC
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,6 +25,9 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#else
+#define BUFSIZ 8192
+#endif
 
 typedef struct {
     uint8_t  buf[64];
