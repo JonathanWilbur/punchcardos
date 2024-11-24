@@ -5,6 +5,7 @@ arch/x86/entry/vdso/vdso2c
 arch/x86/tools/relocs
 awk
 cat
+cut -b -64
 drivers/tty/vt/conmakehash
 echo
 gcc
@@ -13,8 +14,10 @@ lib/gen_crc32table
 ln
 make
 mkdir
+mv -f
 nm
 objcopy
+readelf -rW arch/x86/entry/vdso/vdso64.so.dbg
 rm
 scripts/kconfig/conf
 scripts/link-vmlinux.sh
@@ -22,6 +25,7 @@ scripts/link-vmlinux.sh
 scripts/mod/mk_elfconfig
 scripts/mod/modpost
 ./scripts/remove-stale-files
+sed
 set
 sh
 tr
@@ -38,4 +42,3 @@ xargs rm -f
 
 # Found but not needed
 git
-sed
