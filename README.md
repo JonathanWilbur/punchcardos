@@ -438,10 +438,11 @@ I need to report this. I don't think it should do this.
 ## To Do
 
 - [ ] MVP
-  - [ ] `elfread`
+  - [ ] `readelf`
     - [ ] Print symbols
     - [ ] Print symbols in executable code
     - [ ] Print relocations
+    - [ ] `readelf -rW` support
   - [ ] `ld`
     - This might get a lot simpler if I can get VDSO to _not_ be built.
     - You might be able to use `neatld` (see `./programs/neatld.c`)
@@ -462,8 +463,12 @@ I need to report this. I don't think it should do this.
   - [x] `truncate`
   - [x] `chmod`
   - [x] `chown`
-  - [ ] `find`
+  - [x] ~~`find`~~ (This doesn't seem to be necessary.)
   - [ ] `grep`
+    - `grep -F -f ./scripts/head-object-list.txt`
+    - `grep -v _NONE`
+    - `grep -q " R_\w*_"`
+    - `sed -n`
   - [ ] `httpget`
   - [x] `env`
   - [x] `stty`
@@ -474,12 +479,15 @@ I need to report this. I don't think it should do this.
   - [x] `hostname`
   - [x] `strings`
   - [x] `tty`
-  - [ ] `[` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
+  - [x] `test` (https://raw.githubusercontent.com/michael105/minicore/master/porting/minutils/src/%5B.c)
+    - `[ ! -r include/generated/utsversion.h ]`
+    - `[ 10 -gt 255 ]` (What is this for?)
+    - `[ ! -d '/build/stage/src/linux/tools/objtool/libsubcmd/include/subcmd/' ]`
   - [x] `mv`
   - [x] `cp`
   - [x] `rsync`
   - [x] `printf` (Used to build linux, but not much)
-  - [x] ~~`perl`~~ (Does not seem to be needed for a Linux build)
+  - [x] ~~`perl`~~ (Does not seem to be needed for a Linux build)q
   - [x] `sort`
   - [x] `uniq`
   - [x] `xargs`
@@ -522,13 +530,16 @@ I need to report this. I don't think it should do this.
 - [ ] Get QEMU graphical console working again
 - [ ] Delete the unused `arch/*` and `test` folders from Linux to minimize the amount of code
 - [ ] Programs
+  - [ ] My own ideas
+    - [ ] `nofun` - Turn unused functions into nop sleds + exit
+    - [ ] `hashsyms` - Hash functions and symbols for easy visual comparison of binaries
+    - [ ] `elfdiff`
   - [x] `arch`
   - [ ] `asn1parse`
   - [x] ~~`awk`~~
   - [x] `basename`
   - [x] `bc4linux`
   - [ ] `bc`
-  - [ ] `[`
   - [ ] `c4`
   - [x] `cat`
   - [ ] `chgrp`
@@ -545,7 +556,7 @@ I need to report this. I don't think it should do this.
   - [x] `cowsay`
   - [x] `cp`
   - [x] `cpio`
-  - [ ] `cut`
+  - [x] `cut`
   - [x] `date`
   - [x] `dd`
   - [ ] `diff3`
