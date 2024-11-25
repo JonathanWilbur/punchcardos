@@ -464,11 +464,7 @@ I need to report this. I don't think it should do this.
   - [x] `chmod`
   - [x] `chown`
   - [x] ~~`find`~~ (This doesn't seem to be necessary.)
-  - [ ] `grep`
-    - `grep -F -f ./scripts/head-object-list.txt`
-    - `grep -v _NONE`
-    - `grep -q " R_\w*_"`
-    - `sed -n`
+  - [x] `grep`
   - [ ] `httpget`
   - [x] `env`
   - [x] `stty`
@@ -577,7 +573,7 @@ I need to report this. I don't think it should do this.
   - [ ] `getcap`
   - [ ] `getconf`
   - [ ] `getopt`
-  - [ ] `grep`
+  - [x] `grep`
   - [ ] `groff`
   - [ ] `groups`
   - [ ] `halt`
