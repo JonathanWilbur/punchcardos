@@ -1,4 +1,16 @@
+// sed uses in Linux kernel build:
+// sed -n -r -e 's/^([0-9a-fA-F]+) [ABCDGRSTVW] (.+)$/pa_ = ;/p'
+// sed -n 1p
+// sed -n 's/^[[:alnum:]:_]*\.file=//p'
+// sed -e 's:^:kernel/:' -e 's/$/.ko/'
+// sed -n -e 's/^\([0-9a-fA-F]*\) [ABCDGRSTVW] \(_text\|__start_rodata\|__bss_start\|_end\)$/#define VO_ _AC(0x,UL)/p'
+// sed -n -e 's/^\([0-9a-fA-F]*\) [a-zA-Z] \(startup_32\|efi.._stub_entry\|efi\(32\)\?_pe_entry\|input_data\|kernel_info\|_end\|_ehead\|_text\|_e\?data\|z_.*\)$/#define ZO_ 0x/p'
+// sed 's/ .*//'
+// sed '$d' include/linux/atomic/atomic-arch-fallback.h
+// sed -n '$s:// ::p' include/linux/atomic/atomic-arch-fallback.h
+// sed -ne 	's:^[[:space:]]*\.ascii[[:space:]]*"\(.*\)".*:\1:; /^->/{s:->#\(.*\):/* \1 */:; s:^->\([^ ]*\) [\$#]*\([^ ]*\) \(.*\):#define \1 \2 /* \3 */:; s:->::; p;}'
 /* Taken from here: https://github.com/tar-mirror/minised/tree/master
+
 Released under a BSD 3-Clause "New" or "Revised" License at the time of copying.
 
 Copyright (C) 1995-2003 Eric S. Raymond
