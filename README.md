@@ -437,6 +437,11 @@ I need to report this. I don't think it should do this.
 
 ## To Do
 
+- [ ] Real MVP
+  - [ ] `readelf -rW` support (actually, you might not need to do this if you get rid of vDSO)
+  - [ ] Ext2 Filesystem
+  - [x] Make bash run scripts
+  - [ ] Test `minised` with the expressions Linux uses
 - [ ] MVP
   - [ ] `readelf`
     - [ ] Print symbols
@@ -623,7 +628,7 @@ I need to report this. I don't think it should do this.
   - [x] `rmdir`
   - [x] `rsync`
   - [ ] `sdiff`
-  - [ ] `sed`
+  - [x] `sed`
   - [ ] `seq`
   - [ ] `setcap`
   - [ ] `sha256`
@@ -664,3 +669,88 @@ I need to report this. I don't think it should do this.
   - [ ] `which`
   - [x] `whoami`
   - [x] `xargs`
+
+## Long-Term Approach
+
+- Use `hexedit` UEFI command to manually create binaries
+  - This will only work for very small binaries!
+- Make a super tiny assembler
+  - Actually, this might need to assemble EFI Bytecode... but maybe not
+  - This should be minimal enough to just work with the output of ChibiCC
+    - `addq`
+    - `addsd`
+    - `addss`
+    - `and`
+    - `cdq`
+    - `cqo`
+    - `cvtsd2ss`
+    - `cvtsi2sdl`
+    - `cvtsi2sdq`
+    - `cvtsi2ssl`
+    - `cvtsi2ssq`
+    - `cvtss2sd`
+    - `cvttsd2sil`
+    - `cvttsd2siq`
+    - `cvttss2sil`
+    - `cvttss2siq`
+    - `dec`
+    - `divsd`
+    - `divss`
+    - `faddp`
+    - `fcomip`
+    - `fdivrp`
+    - `fistpl`
+    - `fistpq`
+    - `fistps`
+    - `fmulp`
+    - `fnstcw`
+    - `fstp`
+    - `fstpt`
+    - `fsubrp`
+    - `idiv`
+    - `imul`
+    - `inc`
+    - `jbe`
+    - `je`
+    - `jmp`
+    - `lock cmpxchg`
+    - `mov`
+    - `movl`
+    - `movq`
+    - `movsbl`
+    - `movsd`
+    - `movss`
+    - `movswl`
+    - `movsxd`
+    - `movzb`
+    - `movzbl`
+    - `movzwl`
+    - `movzx`
+    - `mulsd`
+    - `mulss`
+    - `neg`
+    - `or`
+    - `rep stosb`
+    - `sar`
+    - `seta`
+    - `setae`
+    - `setb`
+    - `sete`
+    - `setl`
+    - `setle`
+    - `setne`
+    - `setnp`
+    - `shl`
+    - `shr`
+    - `subsd`
+    - `subss`
+    - `test`
+    - `ucomiss`
+    - `ucomisz`
+    - `xchg`
+    - `xor`
+- Assemble a ChibiCC that has been modified to be simple as possible, but which
+  can still self-host, after verifying source
+- Use that C compiler to build up to TinyCC
+- Build all tools needed
+- Build the Linux kernel

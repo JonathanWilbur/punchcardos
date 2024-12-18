@@ -16,6 +16,7 @@ Jonathan M. Wilbur modified this code a lot:
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
@@ -180,6 +181,10 @@ int sigaction(int sig, const struct sigaction *restrict sa, struct sigaction *re
 }
 
 #endif
+
+static int prefix (const char *pre, const char *str) {
+    return strncmp(pre, str, strlen(pre)) == 0;
+}
 
 static char linebuf[BUFSIZ];
 static int linebufsize = 0;
@@ -2692,20 +2697,7 @@ t_token *word_spliting(t_token *token) {
 }
 
 t_global g_global;
-void init_global(char **envp);
-
-// TODO: Remove built-ins
-// TODO: Make scripting supported.
-int main(int argc, char **argv, char *envp[]) {
-    (void)argc;
-    (void)argv;
-    // rl_catch_signals = 0;
-    init_global(envp);
-    shell_loop();
-    return (0);
-}
-
-void init_global(char **envp) {
+static void init_global(char **envp) {
     char *tmp_shlvl;
     char *tmp_path;
 
@@ -2720,4 +2712,103 @@ void init_global(char **envp) {
         add_env(&g_global.envs, "SHLVL", "1");
     else
         ft_setenv("SHLVL", ft_itoa(ft_atoi(tmp_shlvl) + 1));
+}
+
+static char* read_file_to_memory(const char* filename, size_t* filesize) {
+    struct stat st;
+    int fd = open(filename, O_RDONLY);
+
+    if (fd < 0) {
+        perror("Failed to open file");
+        return NULL;
+    }
+
+    if (stat(filename, &st) < 0) {
+        perror("Failed to get file size");
+        close(fd);
+        return NULL;
+    }
+
+    char* buffer = (char*)malloc(st.st_size + 1);
+    if (buffer == NULL) {
+        perror("Failed to allocate memory");
+        close(fd);
+        return NULL;
+    }
+
+    // TODO: Multiple tries so interruptions are not a problem.
+    size_t bytes_read = read(fd, buffer, st.st_size);
+    if (bytes_read != (size_t)st.st_size) {
+        perror("Failed to read file contents");
+        free(buffer);
+        close(fd);
+        return NULL;
+    }
+
+    // We null terminate the file contents, since it is supposed to be a string.
+    buffer[st.st_size] = '\0';
+
+    if (filesize != NULL)
+        *filesize = (size_t)st.st_size;
+
+    close(fd);
+    return buffer;
+}
+
+#define FLAG_COMMAND        (1 << 0)
+
+// TODO: Remove built-ins
+// TODO: Make scripting supported.
+int main(int argc, char **argv, char *envp[]) {
+    // rl_catch_signals = 0;
+    init_global(envp);
+    char *script = NULL;
+    char *arg;
+    int i;
+    int flags = 0;
+    char *line_start;
+    char *script_idx;
+    t_cmd *cmd;
+
+    if (argc == 1)
+        shell_loop();
+    for (i = 1; i < argc; i++) {
+        arg = argv[i];
+        if (!strcmp(arg, "-c")) {
+            flags |= FLAG_COMMAND;
+            continue;
+        }
+        if (prefix(arg, "-")) {
+            printf("Argument %s not supported\n", arg);
+            return EXIT_FAILURE;
+        }
+        break;
+    }
+    if (i >= argc) {
+        puts("Invalid usage");
+        return EXIT_FAILURE;
+    }
+    script = argv[i];
+    if (!(flags & FLAG_COMMAND))
+        script = read_file_to_memory(script, NULL);
+
+    ignore_signals();
+    script_idx = script;
+    line_start = script;
+    while (1) {
+        char c = *script_idx;
+        if (c != '\n' && c != '\0') {
+            script_idx++;
+            continue;
+        }
+        *script_idx = '\0';
+        cmd = parse_line(line_start);
+        execute(cmd);
+        *script_idx++ = '\n';
+        line_start = script_idx;
+        if (c == '\0')
+            break;
+    }
+
+    return EXIT_SUCCESS;
 }
