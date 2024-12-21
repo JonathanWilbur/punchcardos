@@ -754,3 +754,43 @@ I need to report this. I don't think it should do this.
 - Use that C compiler to build up to TinyCC
 - Build all tools needed
 - Build the Linux kernel
+
+## Kernel Version Choice
+
+I have been reconsidering using a newer Kernel version. Fabrice Bellard (maker
+of TinyCC) managed to compile the Linux Kernel 2.4.x with TinyCC.
+
+I have decided on `2.6.27.21` for the bootstrapping version for the following
+reasons:
+
+- 2.6.27.x is an LTS release, and although it is already at its end of life, I
+  would assume that it is more stable than Kernel versions adjacent to it.
+- It is a release that is early enough where there is a lot less complex tooling
+  needed to build it.
+- There is Linux Libre releases available for this version.
+- This version is modern enough where it still supports USB keyboards and other
+  such peripherals you are likely to use.
+- This version has support for the `allnoconfig` Make target.
+- Greg Kroah-Hartman took over the Linux kernel 
+
+### Compiling on the Host System
+
+This version did not compile right out of the box for me. It still took some
+work to make it compile.
+
+1. Add `-fno-pie` to `KBUILD_CFLAGS` in `Makefile`.
+  - PIE became a default in newer versions of GCC, which is why this is needed.
+2. In `arch/x86/vdso/Makefile`, replace `VDSO_LDFLAGS_vdso.lds = -m elf_x86_64`
+   with `VDSO_LDFLAGS_vdso.lds = -m64`.
+3. Generate `kernel/timeconst.h` and remove `FORCE` from its Make target.
+4. There seems to be some problem with duplicate functions, noticeably where
+   one is marked `extern` and another is not. It seems that maybe older versions
+   of GCC or perhaps the linker treated an `extern` implementation like a "weak"
+   linkage. This might involve a lot of changes to fix.
+5. In `include/linux/inotify.h`, change the `pin_inotify_watch` and
+   `unpin_inotify_watch` _implementations_ (NOT the declarations) from `extern`
+   to `static`. This may need to be reversed once you install headers. I am not
+   sure.
+6. Change `__mutex_unlock_slowpath` and `__mutex_lock_slowpath` from `static` to
+   `extern` in `kernel/mutex.c`. I have no idea why this was needed. It doesn't
+   make any sense.
